@@ -1,0 +1,1489 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Portal Artecon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gelasio:wght@400;500&family=Red+Hat+Display:wght@600;700;800&family=Red+Hat+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --grafite:#4F4C4D; --vermelho:#BC151B; --ciano:#00AEEF; --amarelo:#FFF200;
+  --bg:#FBFEFE; --surface:#FFFFFF; --surface-2:#F2F1F0; --ink:#262324; --ink-2:#5B5758; --ink-3:#8B8788; --line:#E7E5E5;
+  --chrome:#4F4C4D; --chrome-2:#5E5A5B; --chrome-deep:#3A3738; --on-chrome:#FFFFFF; --on-chrome-2:#D2D3D6; --chrome-line:rgba(255,255,255,.14);
+  --brand:#BC151B; --brand-ink:#9C1015; --brand-soft:#FAEAEA; --link:#0B7CA8; --info-soft:#E3F5FD; --warn-soft:#FFFAC2; --warn-ink:#6A5A00; --ok-ink:#0B7CA8;
+  --hero-a:#F7F6F5; --hero-b:#E9E7E6; --b1:#5C5859; --b2:#454142; --b3:#8A8586; --b4:#BCB8B9;
+  --shadow:0 1px 2px rgba(35,35,38,.04),0 8px 24px -14px rgba(35,35,38,.16);
+  --lift:0 2px 4px rgba(35,35,38,.05),0 18px 36px -18px rgba(35,35,38,.3);
+  --r:14px; --r-sm:10px; --sw:268px;
+  --font-ui:"Red Hat Text",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --font-title:"Red Hat Display","Red Hat Text",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  --font-serif:"Bookman Old Style","Gelasio",Georgia,serif;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#171516; --surface:#211F20; --surface-2:#2B2829; --ink:#F3F1F1; --ink-2:#B8B4B5; --ink-3:#8A8687; --line:#383435;
+  --chrome:#1A1718; --chrome-2:#2C2829; --chrome-deep:#0E0C0D; --brand:#D2262C; --brand-ink:#F08B8E; --brand-soft:#3A1C1D; --link:#5CC8F3; --info-soft:#10303D; --warn-soft:#38310F; --warn-ink:#FFE45C; --ok-ink:#5CC8F3;
+  --hero-a:#232021; --hero-b:#1B1819; --b1:#4A4647; --b2:#333031; --b3:#5E5A5B; --b4:#797576;
+  --shadow:0 1px 2px rgba(0,0,0,.3); --lift:0 18px 36px -18px rgba(0,0,0,.8);
+}}
+:root[data-theme="dark"]{
+  --bg:#171516; --surface:#211F20; --surface-2:#2B2829; --ink:#F3F1F1; --ink-2:#B8B4B5; --ink-3:#8A8687; --line:#383435;
+  --chrome:#1A1718; --chrome-2:#2C2829; --chrome-deep:#0E0C0D; --brand:#D2262C; --brand-ink:#F08B8E; --brand-soft:#3A1C1D; --link:#5CC8F3; --info-soft:#10303D; --warn-soft:#38310F; --warn-ink:#FFE45C; --ok-ink:#5CC8F3;
+  --hero-a:#232021; --hero-b:#1B1819; --b1:#4A4647; --b2:#333031; --b3:#5E5A5B; --b4:#797576;
+  --shadow:0 1px 2px rgba(0,0,0,.3); --lift:0 18px 36px -18px rgba(0,0,0,.8);
+}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font:400 14.5px/1.5 var(--font-ui);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4,p,ul,ol{margin:0;padding:0}ul,ol{list-style:none}
+button,input{font:inherit;color:inherit}button{cursor:pointer;background:none;border:0;padding:0}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--ciano);outline-offset:2px;border-radius:6px}
+[hidden]{display:none!important}
+.ic{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}html{scroll-behavior:auto}}
+
+/* ===== casca ===== */
+.app{display:grid;grid-template-columns:var(--sw) minmax(0,1fr);min-height:100dvh;transition:grid-template-columns .28s cubic-bezier(.4,0,.2,1)}
+.side{position:sticky;top:0;height:100dvh;background:linear-gradient(180deg,var(--chrome) 0%,var(--chrome-deep) 100%);color:var(--on-chrome);display:flex;flex-direction:column;overflow:hidden auto;z-index:40}
+.side-top{min-height:96px;display:flex;align-items:center;padding:18px 20px;flex:none}
+.logo{display:block;text-decoration:none;min-width:0;flex:1}
+.plate{display:flex;align-items:center;justify-content:center;background:#FFFFFF;border-radius:10px;padding:12px 16px;box-shadow:0 2px 10px -6px rgba(0,0,0,.5)}
+.lg-full{width:100%;max-width:186px;height:auto;display:block}
+.lg-min{display:none;width:26px;height:auto}
+nav{padding:4px 16px 12px;display:flex;flex-direction:column;gap:3px;flex:1}
+.nav-label{font-size:11.5px;color:var(--on-chrome-2);opacity:.75;padding:16px 14px 6px;white-space:nowrap}
+.nav-rule{height:1px;background:var(--chrome-line);margin:12px 8px}
+.nav-item{display:flex;align-items:center;gap:14px;width:100%;padding:10px 14px;border-radius:var(--r-sm);color:var(--on-chrome-2);font-weight:500;text-align:left;position:relative;white-space:nowrap;transition:background .15s,color .15s}
+.nav-item span{min-width:0;white-space:normal;line-height:1.25;overflow-wrap:break-word}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff}
+.nav-item[aria-current="page"]{background:var(--vermelho);color:#fff;font-weight:600;box-shadow:0 8px 18px -8px rgba(177,52,55,.7)}
+.nav-item .n{margin-left:auto;font-size:12px;opacity:.7;font-style:normal}
+.nav-item .pill{margin-left:auto;background:var(--vermelho);color:#fff;font-size:11.5px;font-weight:700;min-width:22px;height:22px;border-radius:11px;display:grid;place-items:center;padding:0 6px}
+.nav-item[aria-current="page"] .pill{background:#fff;color:var(--vermelho)}
+.motto{margin:8px 24px 0;padding-left:14px;position:relative;font-family:var(--font-serif);color:var(--on-chrome-2);font-size:14px;line-height:1.45}
+.motto::before{content:"";position:absolute;left:0;top:2px;bottom:2px;width:4px;background:linear-gradient(180deg,var(--vermelho) 0 34%,var(--amarelo) 34% 62%,var(--ciano) 62% 100%)}
+.side-foot{display:flex;align-items:center;gap:8px;padding:16px 16px 18px;flex:none}
+.side-foot .nav-item{flex:1;padding:8px 10px;font-size:13px}
+.ver{font-size:12px;font-weight:600;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.12);color:#fff;white-space:nowrap}
+.side .company-m{display:none}
+@media (min-width:821px){
+  .app.collapsed{--sw:80px}
+  .app.collapsed .side-top{padding:16px 10px;justify-content:center}
+  .app.collapsed .plate{padding:10px 8px}
+  .app.collapsed .lg-min{display:block}
+  .app.collapsed .lg-full,.app.collapsed .nav-item span,.app.collapsed .nav-item .n,.app.collapsed .nav-label,.app.collapsed .ver,.app.collapsed .motto{display:none}
+  .app.collapsed .nav-item{justify-content:center;padding:12px 0}
+  .app.collapsed .nav-item .pill{position:absolute;top:3px;right:8px;min-width:17px;height:17px;font-size:10px;padding:0 4px}
+  .app.collapsed .side-foot .ic{transform:scaleX(-1)}
+}
+.scrim{display:none}
+.top{position:sticky;top:0;z-index:30;height:76px;display:flex;align-items:center;gap:12px;padding:0 28px;background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.top .logo{display:none}
+.icon-btn{width:44px;height:44px;border-radius:var(--r-sm);display:grid;place-items:center;color:var(--ink);position:relative;flex:none;transition:background .15s}
+.icon-btn:hover{background:var(--surface-2)}
+.icon-btn .ic{width:22px;height:22px}
+.top .menu-btn,.top .search-btn{display:none}
+.search{flex:1 1 380px;max-width:620px;position:relative}
+.search label{display:flex;align-items:center;gap:12px;height:46px;padding:0 14px;border:1px solid transparent;border-radius:12px;background:var(--surface-2);color:var(--ink-3);transition:border-color .15s,box-shadow .15s,background .15s}
+.search label:focus-within{border-color:var(--ciano);box-shadow:0 0 0 4px var(--info-soft);background:var(--surface)}
+.search input{border:0;outline:0;background:transparent;flex:1;min-width:0;color:var(--ink)}
+kbd{font:500 11.5px/1 var(--font-ui);color:var(--ink-2);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:5px 7px}
+.results{position:absolute;top:54px;left:0;right:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--lift);padding:8px;max-height:60vh;overflow:auto}
+.results h4,.pop h4{font-size:12px;font-weight:500;color:var(--ink-3);padding:8px 10px 4px}
+.results button{display:flex;align-items:center;gap:12px;width:100%;padding:9px 10px;border-radius:var(--r-sm);text-align:left}
+.results button:hover,.results button.on{background:var(--surface-2)}
+.results small{color:var(--ink-3);margin-left:auto;white-space:nowrap}
+.results .none{padding:14px 10px;color:var(--ink-2)}
+.top>.spacer{flex:0 1 8px;margin-left:auto}
+.company{display:flex;align-items:center;gap:10px;height:46px;padding:0 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);max-width:290px;min-width:0;box-shadow:var(--shadow)}
+.company span{min-width:0;text-align:left;line-height:1.2;flex:1}
+.company small{display:block;font-size:11.5px;color:var(--ink-3)}
+.company b{display:block;font-weight:700;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dot{position:absolute;top:5px;right:5px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--vermelho);color:#fff;font-size:10.5px;font-weight:700;display:grid;place-items:center;border:2px solid var(--bg)}
+.profile{display:flex;align-items:center;gap:10px;padding:4px 8px 4px 4px;border-radius:12px;transition:background .15s}
+.profile:hover{background:var(--surface-2)}
+.avatar{width:42px;height:42px;border-radius:50%;background:var(--chrome-deep);color:#fff;display:grid;place-items:center;font-weight:600;font-size:14px;flex:none}
+.profile span{text-align:left;line-height:1.25}
+.profile b{display:block;font-size:13.5px;font-weight:700}
+.profile small{font-size:12px;color:var(--ink-3)}
+.pop-wrap{position:relative}
+.pop{position:absolute;right:0;top:54px;min-width:280px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--lift);padding:8px;z-index:50;animation:pop .16s ease-out}
+@keyframes pop{from{opacity:0;transform:translateY(-6px)}}
+.pop button.mi{display:flex;align-items:center;gap:12px;width:100%;padding:9px 10px;border-radius:var(--r-sm);text-align:left}
+.pop button.mi:hover{background:var(--surface-2)}
+.pop button.mi[aria-checked="true"]{font-weight:700}
+.pop button.mi[aria-checked="true"]::after{content:"";margin-left:auto;width:8px;height:8px;border-radius:50%;background:var(--vermelho)}
+.pop hr{border:0;border-top:1px solid var(--line);margin:6px 0}
+.seg{display:flex;gap:4px;padding:4px 10px 8px}
+.seg button{flex:1;padding:6px;border-radius:8px;border:1px solid var(--line);font-size:13px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+main{padding:4px 28px 28px;max-width:1560px;width:100%;margin:0 auto}
+
+/* ===== peças ===== */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:18px 20px}
+.panel-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.panel-head h2{font:700 17px/1.3 var(--font-title);display:flex;align-items:center;gap:10px}
+.panel-head .link{margin-left:auto}
+.link{color:var(--link);font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.link:hover{text-decoration:underline}
+.link .ic{width:15px;height:15px}
+.tile{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;flex:none;color:#fff;background:var(--tc,var(--grafite));box-shadow:0 6px 14px -8px var(--tc,var(--grafite))}
+.tile.dp{--tc:var(--vermelho)}
+.tile.trib,.tile.tributario{--tc:var(--ciano)}
+.tile.ge,.tile.gestao{--tc:var(--grafite)}
+.tile.cf,.tile.contabil_financeiro{--tc:var(--amarelo);color:#3B3200;box-shadow:0 6px 14px -8px rgba(255,242,0,.9)}
+.tile.adm{--tc:#454548}
+.tile.lg{width:48px;height:48px;border-radius:13px}.tile.lg .ic{width:24px;height:24px}
+.tile.sm{width:34px;height:34px;border-radius:9px}.tile.sm .ic{width:17px;height:17px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;height:44px;padding:0 22px;border-radius:10px;font-weight:600;border:1px solid var(--line);background:var(--surface);color:var(--ink);white-space:nowrap;transition:background .15s,border-color .15s,transform .15s,box-shadow .15s}
+.btn:hover{border-color:var(--ink-3)}.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff;box-shadow:0 10px 20px -10px rgba(177,52,55,.8)}
+.btn.primary:hover{background:var(--brand-ink);border-color:var(--brand-ink)}
+.btn.sm{height:36px;padding:0 14px;font-size:13px}
+.btn .ic{width:17px;height:17px}
+.go{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px;border-radius:8px;background:var(--brand-soft);color:var(--brand-ink);font-weight:600;font-size:12.5px;white-space:nowrap;transition:background .18s,color .18s}
+.go .ic{width:14px;height:14px;transition:transform .18s}
+.go:hover,.hover-go:hover .go{background:var(--brand);color:#fff}
+.go:hover .ic,.hover-go:hover .go .ic{transform:translateX(2px)}
+.go.ghost{background:var(--surface-2);color:var(--ink-2)}
+.go.ghost:hover{background:var(--grafite);color:#fff}
+.status{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink-2);font-weight:500;white-space:nowrap}
+.status::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--k,var(--ink-3));flex:none}
+.status.op{--k:var(--ciano)}.status.inst,.status.man{--k:#C2A800}.status.sus{--k:var(--vermelho)}.status.prep{--k:var(--ink-3)}
+.chip{display:inline-flex;font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:6px;background:var(--surface-2);color:var(--ink-2)}
+.chip.imp{background:var(--brand-soft);color:var(--brand-ink)}.chip.info{background:var(--info-soft);color:var(--link)}.chip.warn{background:var(--warn-soft);color:var(--warn-ink)}
+.empty{padding:24px 8px;text-align:center;color:var(--ink-2)}.empty b{display:block;color:var(--ink);margin-bottom:4px}
+
+/* ===== início ===== */
+.dash{display:grid;grid-template-columns:minmax(0,1fr) 344px;gap:20px;align-items:start}
+.center,.rail{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;min-width:0}
+.hero{position:relative;overflow:hidden;border-radius:16px;min-height:256px;background:linear-gradient(100deg,var(--hero-a) 0%,var(--hero-a) 38%,var(--hero-b) 100%);border:1px solid var(--line);display:flex;align-items:center}
+.hero-text{position:relative;z-index:2;padding:30px 32px;max-width:520px}
+.eyebrow{font-size:11.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--ink-2);font-weight:500}
+.hero h1{font:800 clamp(30px,3.3vw,44px)/1.06 var(--font-title);letter-spacing:-.015em;margin:10px 0 12px}
+.hero h1 em{font-style:normal;color:var(--vermelho)}
+.hero p{color:var(--ink-2);font-size:15px;margin-bottom:20px;max-width:44ch}
+.hero p b{color:var(--ink);font-weight:700}
+.hero-art{position:absolute;right:0;top:0;height:100%;width:62%;z-index:1;animation:art .9s cubic-bezier(.2,.7,.2,1) both}
+@keyframes art{from{opacity:0;transform:translateX(24px)}}
+.hero-words{position:absolute;right:22px;top:12px;z-index:2;font-size:9.5px;letter-spacing:.26em;color:var(--ink-2);line-height:1.85;padding-left:14px;border-left:2px solid var(--vermelho);text-transform:uppercase}
+.sec-head{display:flex;align-items:flex-end;gap:12px;margin-bottom:12px}
+.sec-head h2{font:700 20px/1.2 var(--font-title)}
+.sec-head p{color:var(--ink-2);font-size:14px;margin-top:2px}
+.sec-head .link{margin-left:auto}
+.areas{display:grid;grid-template-columns:repeat(auto-fit,minmax(186px,1fr));gap:14px}
+.area{display:flex;flex-direction:column;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px 16px 14px;min-height:196px;transition:transform .22s,box-shadow .22s,border-color .22s}
+.area:hover{transform:translateY(-3px);box-shadow:var(--lift);border-color:transparent}
+.area h3{font:700 15px/1.25 var(--font-title);margin:14px 0 6px;overflow-wrap:break-word;hyphens:auto}
+.area p{color:var(--ink-2);font-size:12.5px;line-height:1.45;flex:1}
+.area-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;margin-top:12px}
+.pair{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:20px;align-items:stretch}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin:6px 0 10px}
+.kpi{padding:0 14px;border-left:1px solid var(--line);text-align:left}
+.kpi:first-child{border-left:0;padding-left:4px}
+.kpi span{display:block;font-size:12.5px;color:var(--ink-2)}
+.kpi b{display:block;font:800 24px/1.25 var(--font-title)}
+.kpi small{font-size:12px;font-weight:600;color:var(--ok-ink)}
+.kpi small.warn{color:var(--brand-ink)}.kpi small.mute{color:var(--ink-3);font-weight:500}
+.select{white-space:nowrap;display:inline-flex;align-items:center;gap:10px;height:34px;padding:0 12px;border:1px solid var(--line);border-radius:9px;font-size:13px;margin-left:auto;background:var(--surface)}
+.select .ic{width:15px;height:15px}
+.legend{display:flex;gap:16px;justify-content:flex-end;font-size:12.5px;color:var(--ink-2)}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+.chart{width:100%;height:auto;display:block}
+.chart text{font:500 11.5px var(--font-ui);fill:var(--ink-3)}
+.chart .g{stroke:var(--line)}
+.row-li{display:flex;align-items:center;gap:14px;padding:11px 0;border-top:1px solid var(--line);width:100%;text-align:left}
+.row-li:first-of-type{border-top:0}
+.row-li div{min-width:0;flex:1}
+.row-li b{display:block;font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-li small{color:var(--ink-2);font-size:12.5px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-li time,.row-li .when{font-size:12.5px;color:var(--ink-3);white-space:nowrap}
+.row-li .when b{display:inline;font-size:12.5px;color:var(--ink)}
+.row-li .when.hoje b{color:var(--brand-ink)}
+.row-li>.ic{width:16px;height:16px;color:var(--ink-3)}
+.star{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--ink-3);flex:none;transition:background .15s}
+.star:hover{background:var(--surface-2)}
+.star .ic{width:19px;height:19px}
+.star[aria-pressed="true"] .ic{fill:var(--amarelo);color:#B8A000}
+.star[aria-pressed="true"]{animation:bump .3s}
+@keyframes bump{50%{transform:scale(1.25)}}
+.quote{position:relative;overflow:hidden;background:linear-gradient(135deg,var(--hero-a),var(--hero-b));border:1px solid var(--line);border-radius:var(--r);padding:26px 26px 24px;min-height:150px}
+.quote p{font:400 20px/1.4 var(--font-serif);max-width:16em;position:relative}
+.quote i{display:block;width:28px;height:3px;border-radius:2px;background:var(--amarelo);margin:14px 0 12px}
+.quote small{font-size:10.5px;letter-spacing:.24em;color:var(--ink-2);text-transform:uppercase}
+.quote svg{position:absolute;right:14px;bottom:-18px;width:62px;opacity:.55}
+.nt-row{background:var(--surface-2);border-radius:10px;padding:10px 12px;border:0;margin-top:8px}
+.nt-row:first-of-type{margin-top:0}
+.nt-row.unread b::after{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ciano);margin-left:8px;vertical-align:middle}
+.notice{padding:12px 0;border-top:1px solid var(--line)}
+.notice:first-of-type{border-top:0;padding-top:2px}
+.notice b{display:block;font-weight:600;margin:6px 0 2px}
+.notice p{color:var(--ink-2);font-size:13.5px}
+.band{margin-top:24px;display:flex;flex-wrap:wrap;align-items:center;gap:18px 32px;padding:20px 8px 0;border-top:1px solid var(--line)}
+.band-lead{display:flex;align-items:center;gap:16px;flex:1 1 360px}
+.band-lead>.ic{width:44px;height:44px;color:var(--vermelho);stroke-width:1.5}
+.band-lead b{display:block;font:700 17px/1.3 var(--font-title)}
+.band-lead span{color:var(--ink-2)}
+.feat{display:flex;align-items:center;gap:12px}
+.feat .tile{border-radius:50%}
+.feat b{display:block;font-size:13px}.feat small{color:var(--ink-2);font-size:12.5px}
+.foot{display:flex;flex-wrap:wrap;gap:6px 22px;padding:18px 8px 0;color:var(--ink-3);font-size:12.5px}
+.foot a{text-decoration:none}.foot a:hover{color:var(--ink);text-decoration:underline}
+.foot span:last-child{margin-left:auto}
+
+/* ===== aplicativos ===== */
+.page-head{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:flex-end;justify-content:space-between;margin-top:8px}
+.page-head h1{font:800 clamp(28px,3vw,38px)/1.1 var(--font-title);letter-spacing:-.015em}
+.page-head p{color:var(--ink-2);margin-top:8px;max-width:64ch}
+.switch{display:flex;align-items:center;gap:12px;font-weight:500}
+.switch i{width:42px;height:24px;border-radius:12px;background:var(--line);position:relative;transition:background .2s;flex:none}
+.switch i::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s}
+.switch[aria-checked="true"] i{background:var(--grafite)}
+.switch[aria-checked="true"] i::after{transform:translateX(18px)}
+.dept{margin-top:34px;scroll-margin-top:92px}
+.dept-head{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.dept-head h2{font:700 20px/1.2 var(--font-title)}
+.dept-head>span:last-child{color:var(--ink-3);font-size:13px;margin-left:auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+.card{display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:18px;min-height:204px;transition:transform .22s,box-shadow .22s,border-color .22s}
+.card.open:hover{transform:translateY(-3px);box-shadow:var(--lift);border-color:transparent}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+.card-top .star{margin:-4px -6px 0 0}
+.card h3{font:700 16px/1.3 var(--font-title)}
+.card p{color:var(--ink-2);font-size:13.5px;margin-top:4px;flex:1}
+.card-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px}
+.card.locked,.card.prep{background:transparent;box-shadow:none}
+.card.prep{border-style:dashed}
+.card.locked .tile,.card.prep .tile{background:transparent;border:1px solid var(--line);color:var(--ink-3);box-shadow:none}
+.card.prep .tile{border-style:dashed}
+.card.locked h3,.card.prep h3{color:var(--ink-2)}
+.card .why{font-size:12.5px;color:var(--ink-3);margin-top:10px}
+
+/* ===== gaveta, central, proposta ===== */
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(420px,100vw);background:var(--surface);border-left:1px solid var(--line);box-shadow:var(--lift);z-index:70;transform:translateX(105%);transition:transform .3s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.drawer.open{transform:none}
+.drawer-scrim{position:fixed;inset:0;background:rgba(20,20,22,.4);z-index:65;opacity:0;pointer-events:none;transition:opacity .3s}
+.drawer-scrim.open{opacity:1;pointer-events:auto}
+.drawer-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 6px}
+.drawer-head h2{font:700 20px/1.2 var(--font-title)}
+.tabs{display:flex;padding:0 20px;border-bottom:1px solid var(--line)}
+.tabs button{padding:10px 2px;margin-right:22px;font-weight:600;color:var(--ink-3);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--vermelho)}
+.drawer-body{flex:1;overflow:auto;padding:14px 20px}
+.drawer-foot{padding:14px 20px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:10px}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-top:24px;align-items:start}
+.sec{margin-top:34px}
+.prose{max-width:70ch;color:var(--ink-2)}.prose p+p{margin-top:12px}
+.sw-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+.sw{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--surface)}
+.sw i{display:block;height:64px}.sw div{padding:12px 14px}.sw b{display:block}
+.sw code{font:500 12.5px var(--font-ui);color:var(--ink-3)}.sw p{font-size:13px;color:var(--ink-2);margin-top:4px}
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;counter-reset:f}
+.flow li,.wire li{border:1px solid var(--line);border-radius:var(--r);padding:16px;background:var(--surface)}
+.flow li{counter-increment:f}
+.flow li::before{content:counter(f);font:800 22px/1 var(--font-title);color:var(--vermelho);display:block;margin-bottom:8px}
+.flow b,.wire b{display:block;margin-bottom:3px}.flow p,.wire p{font-size:13.5px;color:var(--ink-2)}
+.wire{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.log li{display:grid;grid-template-columns:80px 96px minmax(0,1fr);gap:12px;padding:14px 0;border-top:1px solid var(--line)}
+.log li:first-child{border-top:0}
+.note{border-left:3px solid var(--amarelo);background:var(--warn-soft);padding:12px 16px;border-radius:0 var(--r-sm) var(--r-sm) 0;font-size:14px;margin-top:16px;max-width:76ch}
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,16px);background:var(--ink);color:var(--bg);padding:12px 20px;border-radius:12px;font-weight:500;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:90;max-width:calc(100vw - 32px);text-align:center}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+.view-in{animation:vin .28s ease-out}
+@keyframes vin{from{opacity:0;transform:translateY(8px)}}
+
+/* ===== responsivo ===== */
+@media (max-width:1380px){.dash{grid-template-columns:minmax(0,1fr)}.rail{grid-template-columns:repeat(2,minmax(0,1fr))}.rail .quote{grid-column:1/-1;min-height:0}.hero-words{display:none}}
+@media (max-width:1180px){.pair{grid-template-columns:minmax(0,1fr)}.profile span,.profile>.ic{display:none}}
+@media (max-width:980px){.company small{display:none}.company{max-width:210px}kbd{display:none}}
+@media (max-width:820px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{position:fixed;left:0;top:0;bottom:0;width:min(300px,86vw);transform:translateX(-105%);transition:transform .3s cubic-bezier(.4,0,.2,1);padding-top:env(safe-area-inset-top,0px)}
+  .app.side-open .side{transform:none}
+  .scrim{display:block;position:fixed;inset:0;background:rgba(20,20,22,.45);z-index:35;opacity:0;pointer-events:none;transition:opacity .3s}
+  .app.side-open .scrim{opacity:1;pointer-events:auto}
+  .side .company-m{display:flex;margin:0 16px 10px;background:rgba(255,255,255,.1);border-color:transparent;color:#fff;max-width:none;box-shadow:none}
+  .side .company-m small{display:block;color:var(--on-chrome-2)}
+  .side-foot .nav-item{display:none}.side-foot{justify-content:flex-end}
+  .top{padding:0 12px;gap:2px;height:64px}
+  .top .menu-btn,.top .search-btn{display:grid}
+  .top .logo{display:block;margin-left:2px;flex:0 1 auto}
+  .top .plate{background:transparent;box-shadow:none;padding:0}
+  .top .lg-full{width:124px}
+  .top .company,.top .apps-btn{display:none}
+  .search{display:none;position:absolute;left:12px;right:12px;top:9px;max-width:none;z-index:2}
+  .top.searching .search{display:block}
+  .top.searching .logo,.top.searching .menu-btn{visibility:hidden}
+  main{padding:4px 14px 24px}
+  .rail{grid-template-columns:minmax(0,1fr)}
+  .hero{min-height:0}.hero-art{opacity:.22;width:100%}.hero-text{padding:24px 20px}
+  .areas{grid-template-columns:repeat(2,minmax(0,1fr))}.area{min-height:0}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 0}.kpi:nth-child(3){border-left:0;padding-left:4px}
+  .sec-head{flex-wrap:wrap}.sec-head .link{margin-left:0}
+  .two{grid-template-columns:minmax(0,1fr)}
+  .grid{grid-template-columns:minmax(0,1fr)}.card{min-height:0}
+  .log li{grid-template-columns:minmax(0,1fr);gap:2px}
+  .foot span:last-child{margin-left:0}
+}
+@media (max-width:460px){.areas{grid-template-columns:minmax(0,1fr)}}
+</style>
+<style>
+/* ===== acréscimos do portal real (login, acessos, auditoria) ===== */
+.login-wrap{min-height:100dvh;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);background:var(--bg)}
+.login-art{position:relative;overflow:hidden;background:linear-gradient(135deg,var(--hero-a),var(--hero-b));display:flex;align-items:center;justify-content:center;padding:40px}
+.login-art .plate{max-width:340px;width:100%}
+.login-art .frase{position:absolute;left:40px;right:40px;bottom:36px;font-family:var(--font-serif);font-size:18px;color:var(--ink-2);padding-left:14px;border-left:4px solid var(--vermelho)}
+.login-box{display:flex;align-items:center;justify-content:center;padding:32px}
+.login-card{width:100%;max-width:380px}
+.login-card h1{font:800 26px/1.2 var(--font-title);letter-spacing:-.015em}
+.login-card p.sub{color:var(--ink-2);margin:6px 0 24px}
+.f{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.f label{font-weight:600;font-size:13.5px}
+.f input{height:46px;padding:0 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);width:100%}
+.f input:focus{outline:0;border-color:var(--ciano);box-shadow:0 0 0 4px var(--info-soft)}
+.btn.block{width:100%;height:46px}
+.msg{padding:11px 14px;border-radius:10px;font-size:14px;margin-bottom:14px;display:none}
+.msg.on{display:block}
+.msg.erro{background:var(--brand-soft);color:var(--brand-ink)}
+.msg.ok{background:var(--info-soft);color:var(--link)}
+.link-btn{background:none;border:0;color:var(--link);font-weight:600;font-size:13.5px;cursor:pointer;padding:0}
+.login-foot{margin-top:22px;padding-top:16px;border-top:1px solid var(--line);color:var(--ink-3);font-size:12.5px}
+.carregando{padding:60px 20px;text-align:center;color:var(--ink-2)}
+.spin{width:26px;height:26px;border:3px solid var(--line);border-top-color:var(--vermelho);border-radius:50%;margin:0 auto 12px;animation:g .8s linear infinite}
+@keyframes g{to{transform:rotate(360deg)}}
+table.tb{width:100%;border-collapse:collapse}
+table.tb th{text-align:left;font-size:12.5px;color:var(--ink-2);font-weight:600;padding:10px 12px;background:var(--surface-2);white-space:nowrap}
+table.tb td{padding:11px 12px;border-top:1px solid var(--line);font-size:14px;vertical-align:middle}
+table.tb tr:hover td{background:var(--surface-2)}
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:3px 9px;border-radius:6px;background:var(--surface-2);color:var(--ink-2);white-space:nowrap}
+.tag.ok{background:var(--info-soft);color:var(--link)}
+.tag.no{background:var(--brand-soft);color:var(--brand-ink)}
+.tag.adm{background:var(--warn-soft);color:var(--warn-ink)}
+.acoes{display:flex;gap:6px;flex-wrap:wrap}
+.mini{height:28px;padding:0 10px;border-radius:7px;border:1px solid var(--line);background:var(--surface);font-size:12.5px;font-weight:600}
+.mini:hover{border-color:var(--ink-3)}
+.mini.rd{border-color:var(--brand);color:var(--brand-ink)}
+.mini.rd:hover{background:var(--brand-soft)}
+dialog.dlg{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);color:var(--ink);padding:0;width:min(460px,calc(100vw - 32px));box-shadow:var(--lift)}
+dialog.dlg::backdrop{background:rgba(20,20,22,.5)}
+.dlg-in{padding:22px}
+.dlg-in h2{font:700 19px/1.3 var(--font-title);margin-bottom:6px}
+.dlg-in p{color:var(--ink-2);margin-bottom:16px}
+.dlg-acoes{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}
+select.sel{height:40px;padding:0 12px;border:1px solid var(--line);border-radius:9px;background:var(--surface);width:100%}
+.vazio{padding:34px 12px;text-align:center;color:var(--ink-2)}
+.vazio b{display:block;color:var(--ink);margin-bottom:4px}
+@media (max-width:860px){.login-wrap{grid-template-columns:minmax(0,1fr)}.login-art{display:none}}
+</style>
+</head>
+<body>
+
+<!-- ============ TELA DE ENTRADA ============ -->
+<div class="login-wrap" id="telaLogin">
+  <div class="login-art">
+    <span class="plate"><svg class="lg-full" viewBox="0 0 392 207" role="img" aria-label="Artecon Artes Contábeis"><use href="#lg"/></svg></span>
+    <p class="frase">Contabilidade que organiza pessoas, empresas e resultados.</p>
+  </div>
+  <div class="login-box">
+    <div class="login-card">
+      <h1>Portal Artecon</h1>
+      <p class="sub">Entre com o e-mail do escritório.</p>
+
+      <div class="msg" id="loginMsg"></div>
+
+      <form id="formLogin" autocomplete="on">
+        <div class="f">
+          <label for="email">E-mail</label>
+          <input id="email" type="email" autocomplete="username" required placeholder="nome@artecon.cnt.br">
+        </div>
+        <div class="f">
+          <label for="senha">Senha</label>
+          <input id="senha" type="password" autocomplete="current-password" required>
+        </div>
+        <button class="btn primary block" type="submit" id="btnEntrar">Entrar</button>
+      </form>
+
+      <p style="margin-top:14px"><button class="link-btn" id="btnRecuperar">Esqueci minha senha</button></p>
+
+      <div class="login-foot">
+        Artecon Artes Contábeis, Palhoça/SC · Portal <span id="verLogin"></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ APLICATIVO ============ -->
+<div class="app" id="app" hidden>
+  <aside class="side" id="side" aria-label="Menu principal">
+    <div class="side-top">
+      <a class="logo" href="#" data-ir="inicio" aria-label="Portal Artecon, início">
+        <span class="plate">
+          <svg class="lg-full" viewBox="0 0 392 207" role="img" aria-label="Artecon Artes Contábeis"><use href="#lg"/></svg>
+          <svg class="lg-min" viewBox="0 0 71 124" aria-hidden="true"><use href="#lgm"/></svg>
+        </span>
+      </a>
+    </div>
+    <button class="company company-m" data-pop="popEmpresa"></button>
+    <nav id="nav"></nav>
+    <p class="motto">Contabilidade que organiza pessoas, empresas e resultados.</p>
+    <div class="side-foot">
+      <button class="nav-item" data-acao="recolher" title="Recolher ou expandir o menu">
+        <svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2.500"/><path d="M9 4v16M15 10l-2 2 2 2"/></svg><span>Recolher menu</span>
+      </button>
+      <button class="ver" data-ir="versoes" id="verBadge" title="Histórico de versões"></button>
+    </div>
+  </aside>
+  <div class="scrim" data-acao="fecharMenu"></div>
+
+  <div class="main">
+    <header class="top" id="top">
+      <button class="icon-btn menu-btn" data-acao="abrirMenu" aria-label="Abrir menu">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <a class="logo" href="#" data-ir="inicio" aria-label="Portal Artecon, início">
+        <span class="plate"><svg class="lg-full" viewBox="0 0 392 207" role="img" aria-label="Artecon"><use href="#lg"/></svg></span>
+      </a>
+      <div class="search" role="search">
+        <label>
+          <svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.500"/><path d="M20 20l-4-4"/></svg>
+          <input id="busca" placeholder="Pesquisar aplicativos e pessoas" autocomplete="off" aria-label="Pesquisa">
+          <kbd>Ctrl K</kbd>
+        </label>
+        <div class="results" id="resultados" hidden></div>
+      </div>
+      <div class="spacer"></div>
+      <button class="icon-btn search-btn" data-acao="buscar" aria-label="Pesquisar">
+        <svg class="ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.500"/><path d="M20 20l-4-4"/></svg>
+      </button>
+      <div class="pop-wrap">
+        <button class="company" id="btnEmpresa" data-pop="popEmpresa" aria-haspopup="menu"></button>
+        <div class="pop" id="popEmpresa" hidden></div>
+      </div>
+      <button class="icon-btn apps-btn" data-ir="apps" aria-label="Todos os aplicativos">
+        <svg class="ic" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><circle cx="6" cy="6" r="1.700"/><circle cx="12" cy="6" r="1.700"/><circle cx="18" cy="6" r="1.700"/><circle cx="6" cy="12" r="1.700"/><circle cx="12" cy="12" r="1.700"/><circle cx="18" cy="12" r="1.700"/><circle cx="6" cy="18" r="1.700"/><circle cx="12" cy="18" r="1.700"/><circle cx="18" cy="18" r="1.700"/></svg>
+      </button>
+      <div class="pop-wrap">
+        <button class="profile" id="btnPerfil" data-pop="popPerfil" aria-haspopup="menu"></button>
+        <div class="pop" id="popPerfil" hidden></div>
+      </div>
+    </header>
+
+    <main><div id="tela"></div>
+      <footer class="foot">
+        <span>Artecon Artes Contábeis, Palhoça/SC</span>
+        <span id="footVer"></span>
+      </footer>
+    </main>
+  </div>
+</div>
+
+<dialog class="dlg" id="dlg"><div class="dlg-in" id="dlgIn"></div></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><style>.lg-ink{fill:var(--lg-ink,#4F4C4D)}.lg-ink-s{stroke:var(--lg-ink,#4F4C4D)}.lg-paper{fill:var(--lg-paper,#FFFFFF)}.lg-rd{fill:var(--lg-rd,#BC151B)}.lg-yl{fill:var(--lg-yl,#FFF200)}.lg-cy{fill:var(--lg-cy,#00AEEF)}</style><symbol id="lg" viewBox="225 194 392 207"><path class="lg-ink" d="M 282.984375 343.113281 L 255.589844 343.113281 L 255.589844 339.316406 L 260.828125 339.316406 L 257.03125 296.445312 L 241.875 296.445312 L 237.652344 339.316406 L 242.894531 339.316406 L 242.894531 343.113281 L 227.035156 343.113281 L 227.035156 339.316406 L 232.308594 339.316406 L 247.148438 195.375 L 264.03125 195.375 L 277.746094 339.316406 L 282.984375 339.316406 Z M 256.820312 292.71875 L 249.824219 212.886719 L 242.085938 292.71875 Z M 335.949219 266.972656 L 319.453125 266.972656 L 319.453125 244.609375 C 319.453125 239.261719 317.765625 236.589844 314.390625 236.589844 C 312.210938 236.589844 309.996094 237.785156 307.8125 240.175781 L 307.8125 339.316406 L 313.160156 339.316406 L 313.160156 343.113281 L 286.078125 343.113281 L 286.078125 339.316406 L 291.425781 339.316406 L 291.425781 237.1875 L 286.078125 237.1875 L 286.078125 233.390625 L 307.8125 233.390625 L 307.8125 236.378906 C 310.910156 233.707031 314.777344 232.371094 319.453125 232.371094 C 330.425781 232.371094 335.949219 238.804688 335.949219 251.710938 Z M 375.160156 343.113281 L 369.921875 343.113281 C 363.0625 343.113281 357.367188 341.003906 352.863281 336.816406 C 348.363281 332.632812 346.113281 327.570312 346.113281 321.589844 L 346.113281 237.1875 L 340.765625 237.1875 L 340.765625 233.390625 L 346.113281 233.390625 L 346.113281 202.792969 L 362.5 195.375 L 362.5 233.390625 L 374.351562 233.390625 L 374.351562 237.1875 L 362.5 237.1875 L 362.5 330.839844 C 362.5 336.5 364.960938 339.316406 369.921875 339.316406 L 375.160156 339.316406 Z M 430.304688 322.609375 C 430.304688 328.660156 428.050781 333.757812 423.550781 337.90625 C 419.050781 342.058594 413.351562 344.132812 406.496094 344.132812 C 399.636719 344.132812 393.941406 342.058594 389.402344 337.90625 C 384.867188 333.757812 382.582031 328.660156 382.582031 322.609375 L 382.582031 253.890625 C 382.582031 247.84375 384.867188 242.742188 389.402344 238.59375 C 393.941406 234.445312 399.636719 232.371094 406.496094 232.371094 C 413.351562 232.371094 419.050781 234.445312 423.550781 238.59375 C 428.050781 242.742188 430.304688 247.84375 430.304688 253.890625 L 430.304688 289.9375 L 399.074219 289.9375 L 399.074219 331.894531 C 399.074219 337.519531 401.535156 340.335938 406.496094 340.335938 C 411.382812 340.335938 413.808594 337.519531 413.808594 331.894531 L 413.808594 309.527344 L 430.304688 309.527344 Z M 413.808594 286.140625 L 413.808594 244.609375 C 413.808594 238.980469 411.382812 236.167969 406.496094 236.167969 C 401.535156 236.167969 399.074219 238.980469 399.074219 244.609375 L 399.074219 286.140625 Z M 488.507812 322.609375 C 488.507812 328.660156 486.253906 333.757812 481.753906 337.90625 C 477.253906 342.058594 471.554688 344.132812 464.699219 344.132812 C 457.839844 344.132812 452.144531 342.058594 447.605469 337.90625 C 443.070312 333.757812 440.785156 328.660156 440.785156 322.609375 L 440.785156 253.890625 C 440.785156 247.84375 443.070312 242.742188 447.605469 238.59375 C 452.144531 234.445312 457.839844 232.371094 464.699219 232.371094 C 471.554688 232.371094 477.253906 234.445312 481.753906 238.59375 C 486.253906 242.742188 488.507812 247.84375 488.507812 253.890625 L 488.507812 266.972656 L 472.011719 266.972656 L 472.011719 244.609375 C 472.011719 238.980469 469.585938 236.167969 464.699219 236.167969 C 459.738281 236.167969 457.277344 238.980469 457.277344 244.609375 L 457.277344 331.894531 C 457.277344 337.519531 459.738281 340.335938 464.699219 340.335938 C 469.585938 340.335938 472.011719 337.519531 472.011719 331.894531 L 472.011719 309.527344 L 488.507812 309.527344 Z M 615.636719 343.113281 L 593.972656 343.113281 L 593.972656 244.609375 C 593.972656 239.261719 591.933594 236.589844 587.820312 236.589844 C 585.113281 236.589844 582.582031 237.785156 580.1875 240.175781 L 580.1875 339.316406 L 585.535156 339.316406 L 585.535156 343.113281 L 558.453125 343.113281 L 558.453125 339.316406 L 563.800781 339.316406 L 563.800781 237.1875 L 558.453125 237.1875 L 558.453125 233.390625 L 580.1875 233.390625 L 580.1875 236.378906 C 583.285156 233.707031 587.363281 232.371094 592.425781 232.371094 C 604.382812 232.371094 610.363281 238.804688 610.363281 251.710938 L 610.363281 339.316406 L 615.636719 339.316406 Z M 615.636719 343.113281"/><path class="lg-cy" d="M 256.816406 292.714844 L 273.285156 292.691406 L 273.6875 296.492188 L 257.03125 296.449219 Z M 256.816406 292.714844"/><path class="lg-yl" d="M 346.105469 233.363281 L 362.503906 233.402344 L 362.484375 237.1875 L 346.113281 237.203125 Z M 346.105469 233.363281"/><path class="lg-rd" d="M 300.320312 293.039062 L 300.222656 325.714844 L 291.457031 325.683594 L 291.421875 293.058594 Z M 300.320312 293.039062"/><path class="lg-ink" d="M 549.621094 323.539062 C 549.621094 329.945312 547.238281 335.347656 542.472656 339.742188 C 537.703125 344.136719 531.667969 346.335938 524.40625 346.335938 C 517.140625 346.335938 511.109375 344.136719 506.300781 339.742188 C 501.496094 335.347656 499.074219 329.945312 499.074219 323.539062 L 499.074219 250.753906 C 499.074219 244.347656 501.496094 238.945312 506.300781 234.550781 C 511.109375 230.15625 517.140625 227.957031 524.40625 227.957031 C 531.667969 227.957031 537.703125 230.15625 542.472656 234.550781 C 547.238281 238.945312 549.621094 244.347656 549.621094 250.753906 Z M 549.621094 323.539062"/><path class="lg-rd" d="M 241.03125 384.242188 L 241.03125 380.140625 C 241.03125 377.613281 240.554688 375.847656 239.609375 374.890625 C 238.332031 373.566406 236.601562 372.902344 234.445312 372.902344 C 231.53125 372.902344 230.074219 374.132812 230.074219 376.605469 C 230.074219 377.328125 230.21875 378.164062 230.515625 379.113281 C 230.640625 379.507812 230.71875 379.859375 230.742188 380.164062 C 230.761719 380.558594 230.539062 380.765625 230.085938 380.765625 C 229.046875 380.765625 228.109375 380.535156 227.261719 380.097656 C 226.414062 379.65625 225.984375 379.171875 225.984375 378.640625 C 225.984375 377.273438 226.71875 375.792969 228.199219 374.210938 C 230.1875 372.078125 232.820312 371.003906 236.105469 371.003906 C 239.109375 371.003906 241.4375 371.671875 243.085938 373.003906 C 244.746094 374.335938 245.570312 376.222656 245.570312 378.652344 L 245.570312 391.617188 C 245.570312 393.671875 245.820312 395.128906 246.316406 396 C 246.8125 396.871094 247.648438 397.3125 248.8125 397.3125 C 249.152344 397.3125 249.410156 397.289062 249.613281 397.242188 C 250.011719 397.140625 250.269531 397.085938 250.40625 397.085938 C 250.777344 397.0625 250.957031 397.21875 250.9375 397.546875 C 250.914062 397.941406 250.394531 398.351562 249.378906 398.757812 C 248.363281 399.164062 247.367188 399.367188 246.394531 399.367188 C 244.589844 399.367188 242.949219 398.246094 241.492188 396.023438 C 238.296875 398.449219 235.328125 399.660156 232.59375 399.660156 C 230.527344 399.660156 228.878906 399.105469 227.65625 397.988281 C 226.425781 396.871094 225.816406 395.378906 225.816406 393.503906 C 225.816406 390.972656 226.96875 388.996094 229.285156 387.597656 C 231.597656 386.195312 235.519531 385.078125 241.03125 384.242188 Z M 241.03125 385.539062 C 237.597656 385.847656 234.941406 386.625 233.066406 387.867188 C 231.191406 389.121094 230.253906 390.703125 230.253906 392.644531 C 230.253906 394.167969 230.707031 395.367188 231.597656 396.261719 C 232.492188 397.152344 233.691406 397.605469 235.214844 397.605469 C 237.066406 397.605469 238.613281 396.992188 239.878906 395.785156 C 240.648438 395.019531 241.03125 393.789062 241.03125 392.113281 Z M 263.203125 377.023438 C 265.765625 373.015625 268.128906 371.003906 270.285156 371.003906 C 270.972656 371.003906 271.867188 371.410156 272.984375 372.226562 C 274.101562 373.050781 274.679688 373.703125 274.722656 374.210938 C 274.746094 374.539062 274.398438 375.148438 273.664062 376.042969 C 272.9375 376.933594 272.417969 377.386719 272.113281 377.410156 C 271.957031 377.410156 271.46875 377.148438 270.65625 376.617188 C 269.710938 375.953125 268.804688 375.625 267.945312 375.625 C 266.601562 375.625 265.472656 376.109375 264.570312 377.070312 C 263.667969 378.03125 263.214844 379.238281 263.214844 380.671875 L 263.214844 392.488281 C 263.214844 394.339844 263.464844 395.652344 263.957031 396.441406 C 264.457031 397.21875 265.328125 397.671875 266.558594 397.773438 L 268.273438 397.910156 C 268.984375 397.953125 269.335938 398.167969 269.335938 398.5625 C 269.335938 399.003906 269.03125 399.230469 268.410156 399.230469 C 268.25 399.230469 267.730469 399.175781 266.851562 399.070312 C 266.433594 399.027344 265.8125 399.003906 265 399.003906 L 262.617188 398.96875 L 261.160156 398.96875 C 259.441406 398.96875 258.210938 399.027344 257.488281 399.128906 C 256.910156 399.21875 256.515625 399.273438 256.289062 399.300781 C 255.691406 399.320312 255.398438 399.105469 255.398438 398.640625 C 255.398438 398.269531 255.738281 398.023438 256.425781 397.886719 C 257.375 397.660156 257.984375 397.253906 258.253906 396.667969 C 258.539062 396.070312 258.671875 394.789062 258.671875 392.847656 L 258.671875 378.652344 C 258.671875 376.109375 257.464844 374.84375 255.035156 374.84375 L 253.90625 374.878906 C 253.398438 374.878906 253.148438 374.652344 253.148438 374.210938 C 253.148438 373.941406 253.320312 373.75 253.648438 373.613281 C 253.839844 373.566406 254.089844 373.535156 254.371094 373.511719 C 256.449219 373.320312 258.886719 372.347656 261.710938 370.597656 C 262.007812 370.449219 262.253906 370.359375 262.480469 370.335938 C 262.976562 370.316406 263.238281 370.6875 263.238281 371.46875 L 263.203125 372.089844 Z M 286.765625 375.011719 L 286.765625 391.664062 C 286.765625 393.820312 287.070312 395.222656 287.691406 395.863281 C 288.59375 396.8125 289.882812 397.289062 291.566406 397.289062 C 292.90625 397.289062 294.050781 397.039062 294.976562 396.554688 L 296.691406 395.730469 L 296.894531 395.660156 C 297.15625 395.660156 297.292969 395.785156 297.292969 396.023438 C 297.292969 396.757812 296.421875 397.535156 294.683594 398.382812 C 292.933594 399.230469 291.316406 399.660156 289.8125 399.660156 C 284.742188 399.660156 282.203125 397.015625 282.203125 391.71875 L 282.203125 375.011719 L 279.253906 375.011719 C 278.675781 375.011719 278.394531 374.84375 278.394531 374.515625 C 278.394531 374.210938 278.675781 373.804688 279.253906 373.320312 C 281.828125 371.140625 283.804688 368.949219 285.171875 366.769531 C 285.769531 365.796875 286.1875 365.3125 286.425781 365.3125 C 286.742188 365.3125 286.898438 365.59375 286.898438 366.167969 L 286.765625 371.894531 L 293.8125 371.894531 C 294.785156 371.894531 295.527344 371.714844 296.058594 371.363281 C 296.386719 371.128906 296.636719 370.992188 296.796875 370.96875 C 297.03125 370.925781 297.144531 371.050781 297.121094 371.332031 C 297.121094 371.445312 297.019531 371.714844 296.828125 372.167969 L 296.058594 374.054688 C 295.824219 374.699219 295.335938 375.011719 294.601562 375.011719 Z M 303.683594 382.320312 L 303.648438 383.046875 C 303.648438 386.828125 304.6875 390.003906 306.78125 392.566406 C 308.867188 395.140625 311.433594 396.429688 314.46875 396.429688 C 316.875 396.429688 319.496094 395.34375 322.320312 393.1875 C 322.503906 393.050781 322.660156 392.972656 322.816406 392.949219 C 323.125 392.925781 323.28125 393.109375 323.28125 393.480469 C 323.28125 394.136719 322.511719 395.074219 320.964844 396.292969 C 318.097656 398.542969 315.058594 399.660156 311.863281 399.660156 C 308.269531 399.660156 305.253906 398.292969 302.8125 395.558594 C 300.375 392.828125 299.15625 389.4375 299.15625 385.394531 C 299.15625 381.5625 300.40625 378.199219 302.929688 375.320312 C 305.445312 372.4375 308.382812 371.003906 311.761719 371.003906 C 315.441406 371.003906 318.390625 372.539062 320.59375 375.601562 C 321.125 376.359375 321.667969 377.375 322.21875 378.652344 C 322.773438 379.925781 323.042969 380.820312 323.042969 381.328125 C 323.042969 382.0625 322.332031 382.425781 320.898438 382.425781 L 318.445312 382.390625 L 316.1875 382.320312 Z M 303.832031 380.527344 L 315.046875 380.527344 C 316.785156 380.527344 317.65625 380.175781 317.65625 379.464844 C 317.65625 377.746094 316.910156 376.144531 315.417969 374.664062 C 313.941406 373.183594 312.324219 372.449219 310.574219 372.449219 C 308.765625 372.449219 307.265625 373.171875 306.066406 374.617188 C 304.859375 376.0625 304.113281 378.03125 303.832031 380.527344 Z M 336.710938 371.003906 C 338.464844 371.003906 339.964844 371.230469 341.21875 371.691406 L 342.675781 372.191406 C 343.273438 372.417969 343.566406 372.753906 343.566406 373.21875 L 343.566406 373.75 C 343.566406 374.054688 343.589844 374.371094 343.636719 374.675781 L 343.761719 375.964844 C 343.828125 376.425781 343.863281 376.855469 343.863281 377.226562 C 343.863281 378.085938 343.613281 378.527344 343.128906 378.550781 C 342.855469 378.574219 342.617188 378.289062 342.394531 377.691406 C 341.183594 374.335938 338.914062 372.652344 335.582031 372.652344 C 334.261719 372.652344 333.175781 373.027344 332.328125 373.78125 C 331.480469 374.527344 331.050781 375.476562 331.050781 376.628906 C 331.050781 377.835938 331.503906 378.820312 332.410156 379.578125 C 333.3125 380.320312 335.164062 381.238281 337.941406 382.320312 C 340.699219 383.40625 342.609375 384.546875 343.679688 385.746094 C 344.753906 386.953125 345.285156 388.570312 345.285156 390.589844 C 345.285156 393.085938 344.359375 395.222656 342.519531 396.992188 C 340.675781 398.765625 338.472656 399.660156 335.921875 399.660156 C 334.089844 399.660156 332.101562 399.140625 329.957031 398.101562 C 329.449219 397.863281 329.132812 397.738281 328.996094 397.738281 L 328.140625 397.636719 C 327.628906 397.59375 327.359375 397.320312 327.316406 396.8125 L 327.28125 395.390625 L 327.179688 391.167969 L 327.246094 390.171875 C 327.335938 389.574219 327.574219 389.269531 327.980469 389.246094 C 328.375 389.222656 328.636719 389.550781 328.769531 390.238281 C 329.234375 392.667969 330.136719 394.554688 331.46875 395.921875 C 332.804688 397.289062 334.40625 397.976562 336.28125 397.976562 C 337.898438 397.976562 339.21875 397.503906 340.246094 396.554688 C 341.273438 395.605469 341.785156 394.382812 341.785156 392.90625 C 341.785156 390.65625 340.539062 388.984375 338.066406 387.878906 L 335.164062 386.589844 C 332.507812 385.441406 330.632812 384.253906 329.527344 383.035156 C 328.433594 381.800781 327.878906 380.3125 327.878906 378.550781 C 327.878906 376.425781 328.726562 374.640625 330.429688 373.183594 C 332.125 371.726562 334.226562 371.003906 336.710938 371.003906 Z M 381.84375 371.003906 C 383.742188 371.003906 385.4375 371.242188 386.917969 371.726562 C 388.40625 372.214844 389.152344 372.765625 389.152344 373.375 L 389.121094 374.371094 L 389.355469 376.886719 C 389.355469 378.050781 389.085938 378.660156 388.554688 378.707031 C 388.316406 378.730469 388 378.402344 387.628906 377.714844 C 386.929688 376.449219 385.742188 375.339844 384.070312 374.402344 C 382.410156 373.46875 380.796875 373.003906 379.234375 373.003906 C 377.070312 373.003906 375.304688 373.984375 373.9375 375.964844 C 372.574219 377.941406 371.894531 380.480469 371.894531 383.585938 C 371.894531 387.269531 372.945312 390.386719 375.058594 392.9375 C 377.15625 395.480469 379.734375 396.757812 382.773438 396.757812 C 385.222656 396.757812 387.617188 395.75 389.976562 393.742188 C 390.269531 393.503906 390.53125 393.367188 390.78125 393.34375 C 391.109375 393.300781 391.277344 393.460938 391.277344 393.808594 C 391.277344 394.292969 390.746094 395.007812 389.683594 395.953125 C 386.949219 398.429688 383.664062 399.660156 379.824219 399.660156 C 376.300781 399.660156 373.351562 398.371094 370.980469 395.808594 C 368.609375 393.234375 367.421875 390.046875 367.421875 386.265625 C 367.421875 382.027344 368.824219 378.425781 371.636719 375.453125 C 374.449219 372.484375 377.847656 371.003906 381.84375 371.003906 Z M 409.179688 371.003906 C 413.144531 371.003906 416.554688 372.402344 419.402344 375.195312 C 422.25 377.984375 423.671875 381.304688 423.671875 385.167969 C 423.671875 389.359375 422.269531 392.828125 419.46875 395.558594 C 416.667969 398.292969 413.121094 399.660156 408.839844 399.660156 C 404.648438 399.660156 401.207031 398.328125 398.507812 395.671875 C 395.808594 393.019531 394.449219 389.605469 394.449219 385.460938 C 394.449219 381.453125 395.886719 378.039062 398.753906 375.226562 C 401.621094 372.417969 405.089844 371.003906 409.179688 371.003906 Z M 408.320312 372.324219 C 405.566406 372.324219 403.339844 373.34375 401.65625 375.386719 C 399.972656 377.429688 399.128906 380.109375 399.128906 383.417969 C 399.128906 387.628906 400.175781 391.15625 402.289062 393.988281 C 404.390625 396.824219 407.011719 398.246094 410.140625 398.246094 C 412.875 398.246094 415.03125 397.242188 416.613281 395.234375 C 418.183594 393.222656 418.972656 390.5 418.972656 387.054688 C 418.972656 382.707031 417.980469 379.171875 415.992188 376.425781 C 414.015625 373.691406 411.449219 372.324219 408.320312 372.324219 Z M 437.667969 376.265625 C 440.625 372.753906 443.6875 371.003906 446.871094 371.003906 C 450.394531 371.003906 453.195312 372.449219 455.242188 375.339844 C 456.652344 377.328125 457.363281 380.355469 457.363281 384.410156 L 457.363281 392.328125 L 457.332031 393.3125 L 457.433594 394.90625 C 457.671875 396.359375 458.59375 397.207031 460.210938 397.457031 L 461.601562 397.648438 C 462.199219 397.738281 462.503906 397.964844 462.527344 398.316406 C 462.550781 398.800781 462.1875 399.039062 461.429688 399.039062 C 461.195312 399.039062 460.765625 399.003906 460.144531 398.9375 C 459.421875 398.847656 458.078125 398.800781 456.109375 398.800781 L 452.835938 398.902344 L 451.570312 398.902344 L 450.621094 398.96875 L 450.160156 398.867188 C 450 398.777344 449.921875 398.621094 449.921875 398.371094 C 449.921875 398.042969 450.125 397.828125 450.519531 397.738281 L 451.515625 397.480469 C 452.394531 397.253906 452.835938 396.464844 452.835938 395.097656 L 452.835938 383.679688 C 452.835938 380.605469 452.125 378.246094 450.710938 376.574219 C 449.300781 374.914062 447.289062 374.078125 444.691406 374.078125 C 442.851562 374.078125 441.222656 374.617188 439.800781 375.703125 C 438.378906 376.777344 437.667969 378.019531 437.667969 379.40625 L 437.667969 392.011719 L 437.699219 393.007812 L 437.734375 394.65625 C 437.847656 396.519531 439.371094 397.523438 442.332031 397.707031 C 443.066406 397.773438 443.425781 398.011719 443.425781 398.40625 C 443.425781 398.800781 443.179688 399.003906 442.667969 399.003906 C 442.285156 399.003906 441.734375 398.949219 440.976562 398.835938 C 440.558594 398.789062 439.519531 398.765625 437.871094 398.765625 C 434.355469 398.765625 432.265625 398.8125 431.578125 398.902344 C 430.890625 398.96875 430.449219 399.003906 430.257812 399.003906 C 429.839844 399.003906 429.636719 398.824219 429.65625 398.472656 C 429.679688 398.203125 429.894531 398 430.289062 397.839844 C 431.410156 397.445312 432.167969 396.960938 432.558594 396.382812 C 432.945312 395.808594 433.136719 394.882812 433.136719 393.605469 L 433.136719 378.652344 C 433.136719 377.082031 432.945312 376.019531 432.574219 375.453125 C 432.199219 374.890625 431.488281 374.605469 430.449219 374.605469 L 429.027344 374.640625 C 428.832031 374.640625 428.652344 374.59375 428.492188 374.507812 C 428.304688 374.414062 428.199219 374.269531 428.199219 374.042969 C 428.199219 373.726562 428.484375 373.523438 429.058594 373.410156 C 430.539062 373.148438 431.964844 372.699219 433.328125 372.054688 L 435.078125 371.195312 C 435.769531 370.867188 436.199219 370.65625 436.378906 370.5625 C 436.683594 370.394531 436.953125 370.304688 437.167969 370.304688 C 437.5625 370.304688 437.746094 370.621094 437.699219 371.265625 C 437.679688 371.613281 437.667969 372.042969 437.667969 372.527344 Z M 473.675781 375.011719 L 473.675781 391.664062 C 473.675781 393.820312 473.980469 395.222656 474.601562 395.863281 C 475.503906 396.8125 476.792969 397.289062 478.476562 397.289062 C 479.816406 397.289062 480.960938 397.039062 481.886719 396.554688 L 483.601562 395.730469 L 483.804688 395.660156 C 484.066406 395.660156 484.203125 395.785156 484.203125 396.023438 C 484.203125 396.757812 483.332031 397.535156 481.59375 398.382812 C 479.84375 399.230469 478.226562 399.660156 476.722656 399.660156 C 471.652344 399.660156 469.113281 397.015625 469.113281 391.71875 L 469.113281 375.011719 L 466.164062 375.011719 C 465.585938 375.011719 465.304688 374.84375 465.304688 374.515625 C 465.304688 374.210938 465.585938 373.804688 466.164062 373.320312 C 468.738281 371.140625 470.714844 368.949219 472.082031 366.769531 C 472.679688 365.796875 473.097656 365.3125 473.335938 365.3125 C 473.652344 365.3125 473.808594 365.59375 473.808594 366.167969 L 473.675781 371.894531 L 480.722656 371.894531 C 481.695312 371.894531 482.4375 371.714844 482.96875 371.363281 C 483.296875 371.128906 483.546875 370.992188 483.707031 370.96875 C 483.941406 370.925781 484.054688 371.050781 484.03125 371.332031 C 484.03125 371.445312 483.929688 371.714844 483.738281 372.167969 L 482.96875 374.054688 C 482.734375 374.699219 482.246094 375.011719 481.515625 375.011719 Z M 501.9375 384.242188 L 501.9375 380.140625 C 501.9375 377.613281 501.460938 375.847656 500.511719 374.890625 C 499.234375 373.566406 497.507812 372.902344 495.351562 372.902344 C 492.4375 372.902344 490.980469 374.132812 490.980469 376.605469 C 490.980469 377.328125 491.125 378.164062 491.421875 379.113281 C 491.542969 379.507812 491.625 379.859375 491.644531 380.164062 C 491.667969 380.558594 491.441406 380.765625 490.992188 380.765625 C 489.953125 380.765625 489.015625 380.535156 488.167969 380.097656 C 487.320312 379.65625 486.890625 379.171875 486.890625 378.640625 C 486.890625 377.273438 487.625 375.792969 489.105469 374.210938 C 491.089844 372.078125 493.722656 371.003906 497.011719 371.003906 C 500.015625 371.003906 502.34375 371.671875 503.992188 373.003906 C 505.652344 374.335938 506.476562 376.222656 506.476562 378.652344 L 506.476562 391.617188 C 506.476562 393.671875 506.722656 395.128906 507.222656 396 C 507.71875 396.871094 508.554688 397.3125 509.71875 397.3125 C 510.054688 397.3125 510.316406 397.289062 510.519531 397.242188 C 510.914062 397.140625 511.175781 397.085938 511.3125 397.085938 C 511.683594 397.0625 511.863281 397.21875 511.839844 397.546875 C 511.820312 397.941406 511.300781 398.351562 510.285156 398.757812 C 509.265625 399.164062 508.273438 399.367188 507.300781 399.367188 C 505.492188 399.367188 503.855469 398.246094 502.398438 396.023438 C 499.203125 398.449219 496.230469 399.660156 493.496094 399.660156 C 491.429688 399.660156 489.78125 399.105469 488.5625 397.988281 C 487.332031 396.871094 486.722656 395.378906 486.722656 393.503906 C 486.722656 390.972656 487.871094 388.996094 490.1875 387.597656 C 492.503906 386.195312 496.421875 385.078125 501.9375 384.242188 Z M 501.9375 385.539062 C 498.503906 385.847656 495.847656 386.625 493.972656 387.867188 C 492.097656 389.121094 491.160156 390.703125 491.160156 392.644531 C 491.160156 394.167969 491.613281 395.367188 492.503906 396.261719 C 493.398438 397.152344 494.59375 397.605469 496.117188 397.605469 C 497.972656 397.605469 499.519531 396.992188 500.785156 395.785156 C 501.550781 395.019531 501.9375 393.789062 501.9375 392.113281 Z M 498.492188 365.875 C 497.359375 366.710938 496.613281 367.128906 496.265625 367.128906 C 495.847656 367.128906 495.644531 366.902344 495.667969 366.464844 C 495.691406 366.089844 496.027344 365.199219 496.683594 363.785156 C 497.316406 362.429688 497.710938 361.5625 497.871094 361.210938 L 498.59375 359.527344 C 498.773438 359.085938 499.019531 358.828125 499.347656 358.75 C 499.6875 358.671875 500.667969 358.636719 502.308594 358.636719 C 503.167969 358.636719 503.597656 359.042969 503.597656 359.855469 C 503.597656 360.128906 503.4375 360.433594 503.132812 360.78125 L 502.636719 361.347656 Z M 522.5625 375.238281 C 524.59375 373.625 526.320312 372.519531 527.769531 371.917969 C 529.214844 371.308594 530.792969 371.003906 532.511719 371.003906 C 535.933594 371.003906 538.722656 372.234375 540.902344 374.699219 C 543.074219 377.148438 544.15625 380.3125 544.15625 384.171875 C 544.15625 388.523438 542.847656 392.195312 540.238281 395.199219 C 537.628906 398.191406 534.417969 399.695312 530.625 399.695312 C 527.429688 399.695312 524.445312 398.609375 521.667969 396.453125 C 521.308594 396.167969 521.046875 396.035156 520.867188 396.058594 C 520.5625 396.078125 520.109375 396.6875 519.523438 397.875 C 518.902344 399.058594 518.4375 399.660156 518.121094 399.660156 C 517.726562 399.660156 517.523438 399.378906 517.523438 398.800781 C 517.523438 398.574219 517.601562 398.125 517.757812 397.445312 C 517.929688 396.667969 518.019531 395.4375 518.019531 393.742188 L 518.019531 360.746094 C 518.019531 358.230469 517.828125 356.601562 517.457031 355.878906 C 517.261719 355.53125 516.945312 355.191406 516.515625 354.851562 C 516.089844 354.523438 515.75 354.367188 515.5 354.390625 L 513.421875 354.558594 L 513.152344 354.488281 C 512.960938 354.402344 512.859375 354.242188 512.859375 354.027344 C 512.878906 353.621094 513.242188 353.351562 513.953125 353.191406 C 516.574219 352.59375 519.027344 351.621094 521.308594 350.277344 C 521.589844 350.132812 521.824219 350.050781 521.996094 350.050781 C 522.367188 350.050781 522.5625 350.378906 522.5625 351.046875 Z M 522.5625 379.136719 L 522.5625 389.503906 L 522.527344 390.769531 L 522.988281 393.019531 C 523.632812 394.429688 524.773438 395.628906 526.410156 396.609375 C 528.050781 397.59375 529.742188 398.078125 531.484375 398.078125 C 534.308594 398.078125 536.542969 397.0625 538.226562 395.019531 C 539.898438 392.972656 540.734375 390.238281 540.734375 386.816406 C 540.734375 383.304688 539.628906 380.1875 537.402344 377.453125 C 535.175781 374.710938 532.625 373.34375 529.765625 373.34375 C 527.472656 373.34375 525.441406 374.199219 523.679688 375.929688 C 522.933594 376.652344 522.5625 377.726562 522.5625 379.136719 Z M 553.699219 382.320312 L 553.664062 383.046875 C 553.664062 386.828125 554.703125 390.003906 556.796875 392.566406 C 558.882812 395.140625 561.449219 396.429688 564.488281 396.429688 C 566.890625 396.429688 569.511719 395.34375 572.335938 393.1875 C 572.519531 393.050781 572.675781 392.972656 572.832031 392.949219 C 573.140625 392.925781 573.296875 393.109375 573.296875 393.480469 C 573.296875 394.136719 572.527344 395.074219 570.980469 396.292969 C 568.113281 398.542969 565.074219 399.660156 561.878906 399.660156 C 558.285156 399.660156 555.269531 398.292969 552.832031 395.558594 C 550.390625 392.828125 549.171875 389.4375 549.171875 385.394531 C 549.171875 381.5625 550.425781 378.199219 552.945312 375.320312 C 555.460938 372.4375 558.398438 371.003906 561.777344 371.003906 C 565.457031 371.003906 568.40625 372.539062 570.609375 375.601562 C 571.140625 376.359375 571.683594 377.375 572.234375 378.652344 C 572.789062 379.925781 573.0625 380.820312 573.0625 381.328125 C 573.0625 382.0625 572.347656 382.425781 570.914062 382.425781 L 568.460938 382.390625 L 566.203125 382.320312 Z M 553.847656 380.527344 L 565.0625 380.527344 C 566.800781 380.527344 567.671875 380.175781 567.671875 379.464844 C 567.671875 377.746094 566.925781 376.144531 565.4375 374.664062 C 563.957031 373.183594 562.339844 372.449219 560.589844 372.449219 C 558.78125 372.449219 557.28125 373.171875 556.082031 374.617188 C 554.875 376.0625 554.128906 378.03125 553.847656 380.527344 Z M 584.617188 357.371094 C 585.144531 357.371094 585.675781 357.8125 586.230469 358.691406 L 587.03125 359.957031 C 587.246094 360.261719 587.359375 360.542969 587.359375 360.78125 C 587.382812 361.289062 587.007812 362 586.230469 362.90625 C 585.460938 363.808594 584.839844 364.261719 584.378906 364.261719 C 583.9375 364.261719 583.347656 363.820312 582.628906 362.941406 C 581.894531 362.046875 581.53125 361.359375 581.53125 360.851562 C 581.53125 360.339844 581.9375 359.628906 582.738281 358.726562 C 583.542969 357.824219 584.175781 357.371094 584.617188 357.371094 Z M 586.671875 393.355469 C 586.671875 394.925781 586.839844 395.976562 587.179688 396.496094 C 587.53125 397.027344 588.253906 397.378906 589.359375 397.523438 L 590.871094 397.695312 C 591.675781 397.808594 592.058594 398.089844 592.035156 398.554688 C 592.011719 398.925781 591.722656 399.105469 591.144531 399.105469 C 590.769531 399.105469 590.046875 399.058594 588.984375 398.96875 C 588.386719 398.925781 587.617188 398.902344 586.671875 398.902344 L 584.546875 398.867188 L 582.128906 399.003906 C 581.6875 399.027344 581.339844 399.050781 581.101562 399.09375 C 580.527344 399.164062 580.132812 399.195312 579.90625 399.195312 C 579.308594 399.195312 579.011719 398.992188 579.011719 398.597656 C 579.011719 398.261719 579.214844 398.03125 579.613281 397.898438 L 580.242188 397.695312 C 580.945312 397.457031 581.441406 397.039062 581.710938 396.441406 C 581.996094 395.84375 582.128906 394.894531 582.128906 393.558594 L 582.128906 379.136719 C 582.128906 377.308594 581.949219 376.121094 581.601562 375.566406 C 581.25 375.011719 580.480469 374.742188 579.320312 374.742188 C 578.46875 374.742188 578.0625 374.5625 578.085938 374.210938 C 578.109375 373.90625 578.671875 373.578125 579.78125 373.230469 C 581.011719 372.8125 582.582031 372.101562 584.480469 371.105469 L 586.242188 370.28125 C 586.523438 370.304688 586.671875 370.5625 586.671875 371.074219 Z M 604.597656 371.003906 C 606.347656 371.003906 607.847656 371.230469 609.101562 371.691406 L 610.558594 372.191406 C 611.160156 372.417969 611.453125 372.753906 611.453125 373.21875 L 611.453125 373.75 C 611.453125 374.054688 611.476562 374.371094 611.519531 374.675781 L 611.644531 375.964844 C 611.710938 376.425781 611.746094 376.855469 611.746094 377.226562 C 611.746094 378.085938 611.5 378.527344 611.011719 378.550781 C 610.742188 378.574219 610.503906 378.289062 610.277344 377.691406 C 609.070312 374.335938 606.800781 372.652344 603.46875 372.652344 C 602.144531 372.652344 601.0625 373.027344 600.214844 373.78125 C 599.367188 374.527344 598.9375 375.476562 598.9375 376.628906 C 598.9375 377.835938 599.390625 378.820312 600.292969 379.578125 C 601.195312 380.320312 603.046875 381.238281 605.828125 382.320312 C 608.585938 383.40625 610.492188 384.546875 611.566406 385.746094 C 612.640625 386.953125 613.167969 388.570312 613.167969 390.589844 C 613.167969 393.085938 612.242188 395.222656 610.402344 396.992188 C 608.5625 398.765625 606.359375 399.660156 603.804688 399.660156 C 601.976562 399.660156 599.988281 399.140625 597.84375 398.101562 C 597.332031 397.863281 597.019531 397.738281 596.882812 397.738281 L 596.023438 397.636719 C 595.515625 397.59375 595.242188 397.320312 595.199219 396.8125 L 595.164062 395.390625 L 595.0625 391.167969 L 595.132812 390.171875 C 595.222656 389.574219 595.457031 389.269531 595.867188 389.246094 C 596.261719 389.222656 596.519531 389.550781 596.65625 390.238281 C 597.117188 392.667969 598.023438 394.554688 599.355469 395.921875 C 600.6875 397.289062 602.292969 397.976562 604.167969 397.976562 C 605.78125 397.976562 607.105469 397.503906 608.132812 396.554688 C 609.160156 395.605469 609.667969 394.382812 609.667969 392.90625 C 609.667969 390.65625 608.425781 388.984375 605.953125 387.878906 L 603.046875 386.589844 C 600.394531 385.441406 598.519531 384.253906 597.414062 383.035156 C 596.316406 381.800781 595.765625 380.3125 595.765625 378.550781 C 595.765625 376.425781 596.613281 374.640625 598.316406 373.183594 C 600.011719 371.726562 602.113281 371.003906 604.597656 371.003906"/><path class="lg-ink-s" fill="none" stroke-width="0.5669" d="M 521.633225 382.764963 L 513.703538 385.003244 C 513.769944 381.6009 516.566819 376.741525 521.601975 375.565744"/><path class="lg-ink-s" fill="none" stroke-width="0.5669" d="M 571.5551 382.522775 L 579.484788 384.75715 C 579.418381 381.358713 576.4926 376.729806 571.453538 375.554025"/><path class="lg-paper" d="M 492.234375 257.339844 C 498.546875 258.734375 508.742188 261.304688 514.523438 262.761719 C 516.769531 263.328125 517.777344 264.703125 518.527344 266.472656 L 521.199219 272.773438 C 522.503906 271.695312 521.765625 265.882812 522.054688 262.265625 C 522.75 263.019531 523.335938 263.382812 524.613281 263.511719 L 524.789062 275.507812 L 524.683594 325.710938 C 524.261719 325.691406 523.71875 324.816406 523.609375 323.675781 L 523.503906 315.699219 C 521.890625 316.652344 520.492188 317.304688 518.53125 319.867188 L 521.316406 313.894531 C 519.40625 313.207031 517.585938 312.519531 515.984375 311.050781 C 514.449219 309.480469 513.691406 307.652344 513.773438 304.855469 C 514.277344 301.058594 516.597656 299.632812 517.933594 299.011719 C 518.90625 298.589844 520.691406 298.304688 522.007812 298.050781 C 522.335938 297.988281 521.914062 297.578125 518.792969 297.015625 C 516.019531 296.378906 514.484375 295.597656 512.601562 294 C 510.113281 291.90625 509.539062 289.246094 509.398438 286.671875 C 509.621094 282.945312 511.015625 280.609375 512.847656 279.144531 C 514.882812 277.824219 516.617188 278.054688 518.027344 278.175781 C 519.457031 278.265625 519.753906 279.136719 519.75 279.964844 L 519.679688 282.960938 C 519.265625 284.683594 516.054688 285.195312 515.597656 282.964844 C 515.457031 282.347656 515.140625 282.386719 514.195312 282.40625 C 513.023438 282.796875 511.488281 286.289062 512.527344 288.480469 C 514.332031 293.113281 518.296875 293.785156 522.792969 295.296875 C 522.625 290.058594 522.550781 284.734375 522.035156 279.582031 C 521.445312 274.914062 519.9375 275.109375 518.171875 275.484375 C 515.867188 276.28125 512.777344 275.605469 510.429688 272.230469 L 514.855469 271.898438 L 514.921875 271.125 L 508.742188 271.335938 C 507.179688 271.386719 505 268.644531 502.59375 267.449219 L 509.347656 267.410156 L 509.359375 266.632812 C 504.980469 266.46875 501.820312 266.386719 497.789062 264.832031 C 494.070312 263.160156 492.957031 260.316406 492.234375 257.339844"/><path class="lg-ink" d="M 517.046875 303.605469 C 518.195312 301.402344 520.65625 300.695312 523.398438 300.457031 L 523.507812 312.292969 C 521.523438 311.730469 519.707031 311.171875 517.828125 309.554688 C 516.429688 308.332031 515.84375 305.472656 517.046875 303.605469"/><path class="lg-paper" d="M 556.9375 257.339844 C 550.625 258.730469 540.433594 261.304688 534.652344 262.761719 C 532.402344 263.328125 531.398438 264.703125 530.648438 266.472656 L 527.972656 272.773438 C 526.667969 271.695312 527.410156 265.882812 527.117188 262.265625 C 526.421875 263.019531 525.835938 263.382812 524.558594 263.511719 L 524.382812 275.507812 L 524.488281 325.710938 C 524.914062 325.6875 525.457031 324.816406 525.5625 323.675781 L 525.671875 315.699219 C 527.285156 316.652344 528.679688 317.304688 530.640625 319.867188 L 527.859375 313.894531 C 529.765625 313.207031 531.585938 312.519531 533.191406 311.050781 C 534.722656 309.480469 535.480469 307.652344 535.398438 304.855469 C 534.894531 301.058594 532.574219 299.632812 531.238281 299.011719 C 530.265625 298.589844 528.480469 298.304688 527.164062 298.050781 C 526.839844 297.988281 527.257812 297.578125 530.378906 297.015625 C 533.152344 296.375 534.691406 295.597656 536.574219 294 C 539.0625 291.90625 539.636719 289.246094 539.777344 286.671875 C 539.554688 282.945312 538.15625 280.609375 536.324219 279.144531 C 534.289062 277.820312 532.554688 278.050781 531.144531 278.175781 C 529.714844 278.265625 529.417969 279.136719 529.421875 279.964844 L 529.496094 282.960938 C 529.90625 284.683594 533.121094 285.195312 533.574219 282.964844 C 533.714844 282.347656 534.035156 282.386719 534.976562 282.40625 C 536.148438 282.796875 537.683594 286.289062 536.644531 288.480469 C 534.839844 293.113281 530.875 293.785156 526.382812 295.296875 C 526.546875 290.058594 526.625 284.734375 527.136719 279.582031 C 527.730469 274.910156 529.234375 275.109375 531 275.484375 C 533.308594 276.28125 536.394531 275.605469 538.742188 272.230469 L 534.320312 271.898438 L 534.25 271.125 L 540.433594 271.335938 C 541.996094 271.386719 544.175781 268.644531 546.582031 267.449219 L 539.824219 267.410156 L 539.8125 266.632812 C 544.191406 266.46875 547.351562 266.386719 551.382812 264.832031 C 555.105469 263.160156 556.21875 260.316406 556.9375 257.339844"/><path class="lg-ink" d="M 532.125 303.605469 C 530.980469 301.402344 528.515625 300.691406 525.773438 300.457031 L 525.664062 312.292969 C 527.652344 311.730469 529.464844 311.171875 531.34375 309.554688 C 532.746094 308.332031 533.332031 305.472656 532.125 303.605469"/><path class="lg-paper" d="M 524.640625 254.933594 C 526.519531 254.933594 528.046875 256.457031 528.046875 258.339844 C 528.046875 260.21875 526.519531 261.746094 524.640625 261.746094 C 522.757812 261.746094 521.234375 260.21875 521.234375 258.339844 C 521.234375 256.457031 522.757812 254.933594 524.640625 254.933594"/></symbol><symbol id="lgm" viewBox="489 225 71 124"><path class="lg-ink" d="M 549.621094 323.539062 C 549.621094 329.945312 547.238281 335.347656 542.472656 339.742188 C 537.703125 344.136719 531.667969 346.335938 524.40625 346.335938 C 517.140625 346.335938 511.109375 344.136719 506.300781 339.742188 C 501.496094 335.347656 499.074219 329.945312 499.074219 323.539062 L 499.074219 250.753906 C 499.074219 244.347656 501.496094 238.945312 506.300781 234.550781 C 511.109375 230.15625 517.140625 227.957031 524.40625 227.957031 C 531.667969 227.957031 537.703125 230.15625 542.472656 234.550781 C 547.238281 238.945312 549.621094 244.347656 549.621094 250.753906 Z M 549.621094 323.539062"/><path class="lg-ink-s" fill="none" stroke-width="0.5669" d="M 521.633225 382.764963 L 513.703538 385.003244 C 513.769944 381.6009 516.566819 376.741525 521.601975 375.565744"/><path class="lg-ink-s" fill="none" stroke-width="0.5669" d="M 571.5551 382.522775 L 579.484788 384.75715 C 579.418381 381.358713 576.4926 376.729806 571.453538 375.554025"/><path class="lg-paper" d="M 492.234375 257.339844 C 498.546875 258.734375 508.742188 261.304688 514.523438 262.761719 C 516.769531 263.328125 517.777344 264.703125 518.527344 266.472656 L 521.199219 272.773438 C 522.503906 271.695312 521.765625 265.882812 522.054688 262.265625 C 522.75 263.019531 523.335938 263.382812 524.613281 263.511719 L 524.789062 275.507812 L 524.683594 325.710938 C 524.261719 325.691406 523.71875 324.816406 523.609375 323.675781 L 523.503906 315.699219 C 521.890625 316.652344 520.492188 317.304688 518.53125 319.867188 L 521.316406 313.894531 C 519.40625 313.207031 517.585938 312.519531 515.984375 311.050781 C 514.449219 309.480469 513.691406 307.652344 513.773438 304.855469 C 514.277344 301.058594 516.597656 299.632812 517.933594 299.011719 C 518.90625 298.589844 520.691406 298.304688 522.007812 298.050781 C 522.335938 297.988281 521.914062 297.578125 518.792969 297.015625 C 516.019531 296.378906 514.484375 295.597656 512.601562 294 C 510.113281 291.90625 509.539062 289.246094 509.398438 286.671875 C 509.621094 282.945312 511.015625 280.609375 512.847656 279.144531 C 514.882812 277.824219 516.617188 278.054688 518.027344 278.175781 C 519.457031 278.265625 519.753906 279.136719 519.75 279.964844 L 519.679688 282.960938 C 519.265625 284.683594 516.054688 285.195312 515.597656 282.964844 C 515.457031 282.347656 515.140625 282.386719 514.195312 282.40625 C 513.023438 282.796875 511.488281 286.289062 512.527344 288.480469 C 514.332031 293.113281 518.296875 293.785156 522.792969 295.296875 C 522.625 290.058594 522.550781 284.734375 522.035156 279.582031 C 521.445312 274.914062 519.9375 275.109375 518.171875 275.484375 C 515.867188 276.28125 512.777344 275.605469 510.429688 272.230469 L 514.855469 271.898438 L 514.921875 271.125 L 508.742188 271.335938 C 507.179688 271.386719 505 268.644531 502.59375 267.449219 L 509.347656 267.410156 L 509.359375 266.632812 C 504.980469 266.46875 501.820312 266.386719 497.789062 264.832031 C 494.070312 263.160156 492.957031 260.316406 492.234375 257.339844"/><path class="lg-ink" d="M 517.046875 303.605469 C 518.195312 301.402344 520.65625 300.695312 523.398438 300.457031 L 523.507812 312.292969 C 521.523438 311.730469 519.707031 311.171875 517.828125 309.554688 C 516.429688 308.332031 515.84375 305.472656 517.046875 303.605469"/><path class="lg-paper" d="M 556.9375 257.339844 C 550.625 258.730469 540.433594 261.304688 534.652344 262.761719 C 532.402344 263.328125 531.398438 264.703125 530.648438 266.472656 L 527.972656 272.773438 C 526.667969 271.695312 527.410156 265.882812 527.117188 262.265625 C 526.421875 263.019531 525.835938 263.382812 524.558594 263.511719 L 524.382812 275.507812 L 524.488281 325.710938 C 524.914062 325.6875 525.457031 324.816406 525.5625 323.675781 L 525.671875 315.699219 C 527.285156 316.652344 528.679688 317.304688 530.640625 319.867188 L 527.859375 313.894531 C 529.765625 313.207031 531.585938 312.519531 533.191406 311.050781 C 534.722656 309.480469 535.480469 307.652344 535.398438 304.855469 C 534.894531 301.058594 532.574219 299.632812 531.238281 299.011719 C 530.265625 298.589844 528.480469 298.304688 527.164062 298.050781 C 526.839844 297.988281 527.257812 297.578125 530.378906 297.015625 C 533.152344 296.375 534.691406 295.597656 536.574219 294 C 539.0625 291.90625 539.636719 289.246094 539.777344 286.671875 C 539.554688 282.945312 538.15625 280.609375 536.324219 279.144531 C 534.289062 277.820312 532.554688 278.050781 531.144531 278.175781 C 529.714844 278.265625 529.417969 279.136719 529.421875 279.964844 L 529.496094 282.960938 C 529.90625 284.683594 533.121094 285.195312 533.574219 282.964844 C 533.714844 282.347656 534.035156 282.386719 534.976562 282.40625 C 536.148438 282.796875 537.683594 286.289062 536.644531 288.480469 C 534.839844 293.113281 530.875 293.785156 526.382812 295.296875 C 526.546875 290.058594 526.625 284.734375 527.136719 279.582031 C 527.730469 274.910156 529.234375 275.109375 531 275.484375 C 533.308594 276.28125 536.394531 275.605469 538.742188 272.230469 L 534.320312 271.898438 L 534.25 271.125 L 540.433594 271.335938 C 541.996094 271.386719 544.175781 268.644531 546.582031 267.449219 L 539.824219 267.410156 L 539.8125 266.632812 C 544.191406 266.46875 547.351562 266.386719 551.382812 264.832031 C 555.105469 263.160156 556.21875 260.316406 556.9375 257.339844"/><path class="lg-ink" d="M 532.125 303.605469 C 530.980469 301.402344 528.515625 300.691406 525.773438 300.457031 L 525.664062 312.292969 C 527.652344 311.730469 529.464844 311.171875 531.34375 309.554688 C 532.746094 308.332031 533.332031 305.472656 532.125 303.605469"/><path class="lg-paper" d="M 524.640625 254.933594 C 526.519531 254.933594 528.046875 256.457031 528.046875 258.339844 C 528.046875 260.21875 526.519531 261.746094 524.640625 261.746094 C 522.757812 261.746094 521.234375 260.21875 521.234375 258.339844 C 521.234375 256.457031 522.757812 254.933594 524.640625 254.933594"/></symbol></svg>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+/* =====================================================================
+   PORTAL ARTECON  ·  v1.0.0
+   Porta de entrada dos aplicativos do escritório.
+
+   O portal NÃO guarda dado operacional. Ele lê o núcleo central
+   (schema core) e abre cada aplicativo no endereço cadastrado.
+
+   Toda autorização é decidida no servidor. Esconder um cartão aqui é
+   conveniência de tela, não segurança: quem forçar a chamada esbarra
+   na RLS e nas funções do núcleo.
+   ===================================================================== */
+(function () {
+"use strict";
+
+/* ------------------------------------------------------------------
+   1. CONFIGURAÇÃO — ajuste antes de publicar
+   ------------------------------------------------------------------
+   A chave "publishable" (ou anon) é pública por natureza: ela vai para
+   o navegador de qualquer visitante. Quem protege os dados é a RLS.
+   NUNCA coloque aqui a chave service_role.
+------------------------------------------------------------------- */
+var CFG = {
+  url:   "https://fbxelwhdiisfmnwrerbl.supabase.co",
+  chave: "COLE_AQUI_A_CHAVE_PUBLISHABLE_OU_ANON"
+};
+
+var VERSAO = "v1.0.0";
+var VERSOES = [
+  ["v1.0.0", "20/09/2026",
+   "Primeira versão ligada ao núcleo central: entrada por e-mail e senha, " +
+   "catálogo vindo do banco com os cinco estados de cartão, áreas, favoritos e " +
+   "recentes, tela de Acessos para conceder e revogar, tela de Auditoria, " +
+   "troca de empresa ativa, pesquisa, tema claro e escuro."]
+];
+
+/* ------------------------------------------------------------------
+   2. ATALHOS
+------------------------------------------------------------------- */
+var $  = function (s, r) { return (r || document).querySelector(s); };
+var $$ = function (s, r) { return [].slice.call((r || document).querySelectorAll(s)); };
+var sb = null;
+
+var st = {
+  sessao: null, perfil: null, org: null, orgs: [], papel: null,
+  catalogo: [], empresas: [], empresaAtiva: null,
+  tela: "inicio", recolhido: innerWidth < 1100, tema: "auto",
+  favoritos: [], recentes: [], carregando: false
+};
+
+function esc(s) {
+  return String(s === null || s === undefined ? "" : s)
+    .replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+}
+function toast(m) {
+  var t = $("#toast"); t.textContent = m; t.classList.add("on");
+  clearTimeout(toast.t); toast.t = setTimeout(function () { t.classList.remove("on"); }, 3200);
+}
+function guardar(k, v) { try { localStorage.setItem("portal_artecon_" + k, JSON.stringify(v)); } catch (e) {} }
+function ler(k, padrao) {
+  try { var v = localStorage.getItem("portal_artecon_" + k); return v ? JSON.parse(v) : padrao; }
+  catch (e) { return padrao; }
+}
+
+/* mensagem de erro em português, sem despejar o texto cru do servidor */
+function explicar(erro) {
+  var m = (erro && (erro.message || erro.msg || "")) + "";
+  if (/Invalid login credentials/i.test(m)) return "E-mail ou senha não conferem.";
+  if (/Email not confirmed/i.test(m))      return "Este e-mail ainda não foi confirmado.";
+  if (/rate limit|too many/i.test(m))      return "Muitas tentativas seguidas. Espere um minuto.";
+  if (/Failed to fetch|NetworkError/i.test(m)) return "Sem conexão com o servidor.";
+  if (/schema must be one of|does not exist/i.test(m))
+    return "O portal não alcançou o núcleo central. Confira se o schema core está exposto na API.";
+  if (/permission denied|42501/i.test(m))  return "Seu acesso não permite esta operação.";
+  return m || "Não foi possível concluir.";
+}
+
+/* ------------------------------------------------------------------
+   3. ÍCONES E ÁREAS
+------------------------------------------------------------------- */
+var I={
+ home:'<path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6h-6v6H5a1 1 0 0 1-1-1z"/>',
+ grid:'<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>',
+ bell:'<path d="M6 16v-5a6 6 0 1 1 12 0v5l1.5 2.5h-15zM10 21a2 2 0 0 0 4 0"/>',
+ star:'<path d="M12 3.8l2.5 5.1 5.6.8-4 4 .9 5.6-5-2.7-5 2.7.9-5.600-4-4 5.600-.8z"/>',
+ lock:'<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+ users:'<circle cx="9" cy="8" r="3.2"/><path d="M3 19c.6-3.400 3-5 6-5s5.400 1.600 6 5M16 5.200a3.200 3.200 0 0 1 0 5.600M17.500 14.300c2 .7 3.200 2.300 3.500 4.700"/>',
+ brief:'<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 13h18"/>',
+ tool:'<path d="M14.500 6a4 4 0 0 0-5 5L4 16.500 7.500 20l5.500-5.500a4 4 0 0 0 5-5L15.500 12 12 8.500z"/>',
+ file:'<path d="M7 3h7l4 4v14H7zM14 3v4h4M10 13h5M10 17h5"/>',
+ umbrella:'<path d="M12 3a9 9 0 0 1 9 9H3a9 9 0 0 1 9-9zM12 12v7a2 2 0 0 0 4 0"/>',
+ scale:'<path d="M12 4v16M7 20h10M5 8h14M5 8l-2.500 6a2.500 2.500 0 0 0 5 0zM19 8l-2.500 6a2.500 2.500 0 0 0 5 0z"/>',
+ shield:'<path d="M12 3l7 3v5c0 4.500-3 8-7 10-4-2-7-5.500-7-10V6z"/>',
+ chart:'<path d="M4 4v16h16M8 16v-5M12 16V8M16 16v-3"/>',
+ tag:'<path d="M3 12V4h8l10 10-8 8zM7.500 8.500h.01"/>',
+ merge:'<path d="M6 4v5a6 6 0 0 0 6 6v5M18 4v5a6 6 0 0 1-6 6"/>',
+ building:'<path d="M4 20V9l6-4v15M10 20V11h10v9M3 20h18M14 14h2M14 17h2"/>',
+ barcode:'<path d="M4 6v12M7 6v12M10.500 6v12M13 6v12M16.500 6v12M20 6v12"/>',
+ calc:'<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/>',
+ wallet:'<path d="M4 7a2 2 0 0 1 2-2h11v4M4 7v10a2 2 0 0 0 2 2h13a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1H6a2 2 0 0 1-2-2zM16 14h.01"/>',
+ receipt:'<path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6"/>',
+ person:'<circle cx="12" cy="8" r="4"/><path d="M5 20c.8-3.600 3.400-5.500 7-5.500s6.200 1.900 7 5.500"/>',
+ layers:'<path d="M12 3l9 5-9 5-9-5zM3 13l9 5 9-5"/>',
+ tree:'<rect x="10" y="3" width="4" height="4" rx="1"/><rect x="4" y="17" width="4" height="4" rx="1"/><rect x="16" y="17" width="4" height="4" rx="1"/><path d="M12 7v5M6 17v-3h12v3"/>',
+ steps:'<path d="M4 20h4v-4h4v-4h4V8h4"/>',
+ cal:'<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/>',
+ mail:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+ key:'<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M16 7l3 3"/>',
+ org:'<path d="M5 20V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v15M15 10h3a1 1 0 0 1 1 1v9M3 20h18M9 8h2M9 12h2M9 16h2"/>',
+ audit:'<path d="M9 4h6v3H9zM7 5H6a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1h-1M9 14l2 2 4-4"/>',
+ brush:'<path d="M4 20c3 0 5-1.500 5-4a2.500 2.500 0 0 0-5 0c0 1.500-.5 3-2 4zM10.500 13.500L20 4M14 8l2 2"/>'
+};
+function ic(n,c){return '<svg class="ic'+(c?' '+c:'')+'" viewBox="0 0 24 24" aria-hidden="true">'+I[n]+'</svg>'}
+
+var DEPTS=[["dp","Departamento Pessoal","users"],["trib","Tributário e Fiscal","chart"],["cf","Contábil e Financeiro","wallet"],["ge","Gestão Empresarial","brief"],["adm","Ferramentas Administrativas","tool"]];
+/* id, depto, nome, descrição, ícone, situação do serviço, comercializável */
+var APPS=[
+ ["rescisoes","dp","Rescisões","Cálculo, conferência e prazos de pagamento das rescisões.","file","op",1],
+ ["ferias","dp","Férias","Programação, avisos e recibos de férias por empresa.","umbrella","op",1],
+ ["cct","dp","Convenções Coletivas","Acompanha o Mediador e avisa quando um sindicato registra algo novo.","scale","op",1],
+ ["fgts","dp","FGTS Digital e Reclamatórias","Guias e recolhimentos de processos trabalhistas.","shield","prep",1],
+ ["atp","trib","Análise Tributária Pro","Compara regimes e projeta o impacto da Reforma, com parecer.","chart","op",1],
+ ["rtc","trib","Classificação RTC","Classifica itens no cClassTrib para IBS e CBS.","tag","op",1],
+ ["incorp","trib","Simulação de Incorporação","Calcula em conjunto duas ou mais empresas antes de incorporar.","merge","op",1],
+ ["imob","trib","Análise Imobiliária","Regime específico de operações com imóveis na Reforma.","building","op",1],
+ ["ncm","trib","NCM Pro","Consulta e revisão da classificação fiscal de mercadorias.","barcode","man",1],
+ ["calcrt","trib","Calculadora da Reforma","Apuração de IBS e CBS por operação, nos moldes da Receita.","calc","prep",1],
+ ["financeiro","cf","Financeiro Pro","Contas a pagar e receber, fluxo de caixa e conciliação.","wallet","op",1],
+ ["cobranca","cf","Cobrança Pro","Régua de cobrança e baixa automática do retorno bancário.","receipt","inst",1],
+ ["ir","cf","IR Analyst Pro","Análise e acompanhamento das declarações de IRPF.","person","op",1],
+ ["consol","cf","Consolidação Empresarial","Visão consolidada de grupos de empresas.","layers","prep",1],
+ ["patrimonial","ge","Patrimonial Pro","Gestão de holdings, quotas e bens.","tree","op",1],
+ ["carreira","ge","Carreira Pro","Plano de cargos e salários e avaliações.","steps","op",0],
+ ["agenda","ge","Agenda Pro","Agendamentos e compromissos com clientes.","cal","op",1],
+ ["mail","adm","Artecon Mail","Central de envio de e-mails de todos os aplicativos.","mail","op",0],
+ ["acessos","adm","Acessos e usuários","Libera, suspende e audita o acesso de cada pessoa.","key","op",0],
+ ["plano","adm","Organização e plano","Assinatura, assentos e limites da organização.","org","op",0],
+ ["auditoria","adm","Auditoria","Trilha de alterações de acesso e tentativas recusadas.","audit","prep",0]
+].map(function(a){return{id:a[0],d:a[1],nome:a[2],desc:a[3],ic:a[4],st:a[5],com:a[6]}});
+var ST={op:"Operando",inst:"Instável",man:"Em manutenção",prep:"Em preparação",sus:"Suspenso"};
+var ROLES={
+ admin:{nome:"Cleiver",papel:"Superadministrador",ini:"CL",apps:"*",fav:["rescisoes","atp","cct","cobranca"],rec:[["atp","há 25 min"],["rescisoes","há 1 h"],["rtc","ontem"],["cobranca","ontem"]],ind:[4,7,2]},
+ oper:{nome:"Karina Tavares",papel:"Operadora do Departamento Pessoal",ini:"KT",apps:["rescisoes","ferias","cct","agenda"],fav:["rescisoes","ferias"],rec:[["rescisoes","há 10 min"],["ferias","há 2 h"],["cct","ontem"]],ind:[3,4,1]},
+ cliente:{nome:"Marta Siqueira",papel:"Cliente",ini:"MS",apps:["financeiro","agenda"],sus:["cobranca"],fav:["financeiro"],rec:[["financeiro","há 3 h"],["agenda","16/09"]],ind:[1,1,1],empresa:"Padaria Bom Trigo Ltda"}
+};
+var COMPANIES=["Artecon Artes Contábeis","Padaria Bom Trigo Ltda","Metalúrgica Serra Azul S.A.","Transportes Litoral Sul Ltda","Clínica Vida Plena Ltda","Mercado Ponto Certo Ltda"];
+var PEND=[
+ ["rescisoes","Pagar a rescisão de Larissa Pontes Aguiar","Transportes Litoral Sul Ltda","hoje","vence hoje"],
+ ["rescisoes","Conferir o cálculo de Marcos Vinícius Teles","Padaria Bom Trigo Ltda","21/09","em 2 dias"],
+ ["ferias","Emitir aviso de férias de 3 funcionários","Clínica Vida Plena Ltda","22/09","em 3 dias"],
+ ["cct","Conferir o piso após o aditivo registrado","Metalúrgica Serra Azul S.A.","23/09","em 4 dias"],
+ ["atp","Revisar o parecer da Reforma","Mercado Ponto Certo Ltda","25/09","em 6 dias"],
+ ["financeiro","Aprovar 4 pagamentos da semana","Padaria Bom Trigo Ltda","22/09","em 3 dias"]
+];
+var NOTIFS=[
+ {id:1,app:"rescisoes",t:"Prazo de pagamento vence hoje",p:"Larissa Pontes Aguiar, Transportes Litoral Sul Ltda.",w:"há 20 min"},
+ {id:2,app:"cct",t:"Aditivo registrado no Mediador",p:"Convenção dos metalúrgicos: confira o piso antes do próximo cálculo.",w:"há 2 h"},
+ {id:3,app:"acessos",t:"Pedido de acesso",p:"Bruno Meireles pediu acesso ao Financeiro Pro.",w:"ontem"},
+ {id:4,app:"atp",t:"Parecer concluído",p:"Parecer da Reforma de Mercado Ponto Certo Ltda pronto para revisão.",w:"ontem",read:1},
+ {id:5,app:"cobranca",t:"Retorno bancário processado",p:"38 boletos baixados automaticamente.",w:"17/09",read:1},
+ {id:6,app:"financeiro",t:"Pagamentos aguardando aprovação",p:"4 pagamentos da semana esperam a sua aprovação.",w:"há 1 h"}
+];
+var COMUN=[
+ {k:"imp",tag:"Importante",t:"Manutenção no domingo, 20/09, das 6h às 8h",p:"Financeiro Pro e Cobrança Pro ficam indisponíveis nesse intervalo. Nada precisa ser feito.",w:"18/09"},
+ {k:"warn",tag:"Segurança",t:"Verificação em duas etapas obrigatória a partir de 01/10",p:"Vale para administradores. Ative em Perfil, Segurança.",w:"15/09"},
+ {k:"info",tag:"Novidade",t:"Simulação de Incorporação liberada",p:"Disponível no Tributário e Fiscal para quem já usa o Análise Tributária Pro.",w:"12/09"}
+];
+
+
+I.arrow = '<path d="M5 12h14M13 6l6 6-6 6"/>';
+I.chevr = '<path d="M9 6l6 6-6 6"/>';
+I.chevd = '<path d="M6 9l6 6 6-6"/>';
+I.sair  = '<path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M10 8l-4 4 4 4M6 12h10"/>';
+I.help  = '<circle cx="12" cy="12" r="8.500"/><path d="M9.500 9.500a2.500 2.500 0 1 1 3.500 2.300c-.700.400-1 .900-1 1.700M12 16.500h.01"/>';
+I.clock = '<circle cx="12" cy="12" r="8.500"/><path d="M12 7.500V12l3 2"/>';
+
+var ICONE_AREA = { dp: "users", tributario: "chart", contabil_financeiro: "wallet", gestao: "brief", adm: "tool" };
+var ICONE_APP = {
+  rescisoes: "file", ferias: "umbrella", cct: "scale", fgts: "shield",
+  atp: "chart", rtc: "tag", incorporacao: "merge", imobiliario: "building", ncm: "barcode",
+  cobranca: "receipt", financeiro: "wallet", ir: "person",
+  agenda: "cal", patrimonial: "tree", carreira: "steps",
+  mail: "mail", acessos: "key", auditoria: "audit", plano: "org"
+};
+function iconeDe(app) { return ICONE_APP[app.app_id] || "grid"; }
+
+var ROTULO_SITUACAO = {
+  operando: "Operando", instavel: "Instável", manutencao: "Em manutenção",
+  preparacao: "Em preparação", descontinuado: "Descontinuado"
+};
+var CLASSE_SITUACAO = {
+  operando: "op", instavel: "inst", manutencao: "man",
+  preparacao: "prep", descontinuado: "prep"
+};
+
+/* ------------------------------------------------------------------
+   4. ENTRADA
+------------------------------------------------------------------- */
+function msgLogin(texto, tipo) {
+  var el = $("#loginMsg");
+  el.textContent = texto || "";
+  el.className = "msg" + (texto ? " on " + (tipo || "erro") : "");
+}
+
+function ligarLogin() {
+  $("#formLogin").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var btn = $("#btnEntrar");
+    btn.disabled = true; btn.textContent = "Entrando…";
+    msgLogin("");
+    sb.auth.signInWithPassword({
+      email: $("#email").value.trim(),
+      password: $("#senha").value
+    }).then(function (r) {
+      btn.disabled = false; btn.textContent = "Entrar";
+      if (r.error) { msgLogin(explicar(r.error)); return; }
+      $("#senha").value = "";
+      iniciarSessao(r.data.session);
+    }).catch(function (e2) {
+      btn.disabled = false; btn.textContent = "Entrar";
+      msgLogin(explicar(e2));
+    });
+  });
+
+  $("#btnRecuperar").addEventListener("click", function () {
+    var email = $("#email").value.trim();
+    if (!email) { msgLogin("Escreva o e-mail antes de pedir a recuperação."); $("#email").focus(); return; }
+    sb.auth.resetPasswordForEmail(email, { redirectTo: location.href }).then(function () {
+      msgLogin("Se este e-mail estiver cadastrado, a mensagem de recuperação foi enviada.", "ok");
+    });
+  });
+}
+
+function sair() {
+  sb.auth.signOut().then(function () { location.reload(); });
+}
+
+/* ------------------------------------------------------------------
+   5. CARREGAMENTO DO CONTEXTO
+------------------------------------------------------------------- */
+function iniciarSessao(sessao) {
+  st.sessao = sessao;
+  $("#telaLogin").hidden = true;
+  $("#app").hidden = false;
+  $("#tela").innerHTML = '<div class="carregando"><div class="spin"></div>Carregando seu acesso…</div>';
+  carregarContexto();
+}
+
+function carregarContexto() {
+  var core = sb.schema("core");
+  var uid = st.sessao.user.id;
+
+  Promise.all([
+    core.from("profiles").select("user_id,nome,email,situacao").eq("user_id", uid).maybeSingle(),
+    core.from("organizations").select("id,nome,slug,situacao"),
+    core.from("memberships").select("org_id,papel,situacao").eq("user_id", uid).eq("situacao", "ativo")
+  ]).then(function (r) {
+    var perfil = r[0], orgs = r[1], vinculos = r[2];
+    if (perfil.error) throw perfil.error;
+    if (orgs.error) throw orgs.error;
+    if (vinculos.error) throw vinculos.error;
+
+    if (!perfil.data) {
+      telaSemVinculo("Seu usuário entrou, mas ainda não tem cadastro no portal. Peça a um administrador para incluir você.");
+      return;
+    }
+    if (!vinculos.data || !vinculos.data.length) {
+      telaSemVinculo("Seu usuário não está vinculado a nenhuma organização.");
+      return;
+    }
+
+    st.perfil = perfil.data;
+    st.orgs = orgs.data || [];
+    var preferida = ler("org", null);
+    var v = vinculos.data.filter(function (x) { return x.org_id === preferida; })[0] || vinculos.data[0];
+    st.org = v.org_id;
+    st.papel = v.papel;
+    guardar("org", st.org);
+
+    st.favoritos = ler("fav_" + uid, []);
+    st.recentes = ler("rec_" + uid, []);
+
+    return Promise.all([
+      core.rpc("catalogo_do_usuario", { p_org: st.org }),
+      core.from("companies").select("id,nome,situacao").eq("org_id", st.org).order("nome")
+    ]);
+  }).then(function (r) {
+    if (!r) return;
+    if (r[0].error) throw r[0].error;
+    st.catalogo = r[0].data || [];
+    st.empresas = (r[1] && r[1].data) || [];
+    var emp = ler("empresa", null);
+    st.empresaAtiva = st.empresas.filter(function (e) { return e.id === emp; })[0] || null;
+    desenhar();
+  }).catch(function (e) {
+    $("#tela").innerHTML =
+      '<div class="page-head"><div><h1>Não deu para carregar</h1>' +
+      '<p>' + esc(explicar(e)) + '</p></div></div>' +
+      '<section class="panel"><p style="color:var(--ink-2)">Se o erro falar em schema, confira em Settings → API se o schema <b>core</b> está exposto. ' +
+      'Se falar em permissão, seu usuário pode não ter vínculo ativo.</p>' +
+      '<div style="margin-top:14px"><button class="btn" data-acao="sair">Sair</button></div></section>';
+  });
+}
+
+function telaSemVinculo(texto) {
+  $("#tela").innerHTML =
+    '<div class="page-head"><div><h1>Acesso não liberado</h1><p>' + esc(texto) + '</p></div></div>' +
+    '<section class="panel"><div class="vazio"><b>' + esc(st.sessao.user.email) + '</b>' +
+    'Fale com um administrador do escritório.</div>' +
+    '<div style="display:flex;justify-content:center"><button class="btn" data-acao="sair">Sair</button></div></section>';
+  $("#nav").innerHTML = "";
+}
+
+function souAdmin() { return st.papel === "admin" || st.papel === "superadmin"; }
+function orgAtual() { return st.orgs.filter(function (o) { return o.id === st.org; })[0] || { nome: "Artecon" }; }
+function iniciais(nome) {
+  var p = (nome || "?").trim().split(/\s+/);
+  return ((p[0] || "?")[0] + (p.length > 1 ? p[p.length - 1][0] : "")).toUpperCase();
+}
+
+/* ------------------------------------------------------------------
+   6. CASCA
+------------------------------------------------------------------- */
+function casca() {
+  $("#app").classList.toggle("collapsed", st.recolhido);
+  $("#verBadge").textContent = VERSAO;
+  $("#footVer").textContent = "Portal Artecon " + VERSAO;
+
+  var itens = [["inicio", "Início", "home"], ["apps", "Aplicativos", "grid"]];
+  if (souAdmin()) itens.push(["acessos", "Acessos", "key"], ["auditoria", "Auditoria", "audit"]);
+
+  var h = itens.map(function (i) {
+    return '<button class="nav-item" data-ir="' + i[0] + '" title="' + i[1] + '"' +
+      (st.tela === i[0] ? ' aria-current="page"' : "") + ">" + ic(i[2]) + "<span>" + i[1] + "</span></button>";
+  }).join("");
+
+  var areas = agrupar();
+  if (areas.length) {
+    h += '<div class="nav-rule"></div>';
+    areas.forEach(function (a) {
+      var n = a.apps.filter(function (x) { return x.estado === "abrir"; }).length;
+      if (!n) return;
+      h += '<button class="nav-item" data-area="' + esc(a.id) + '" title="' + esc(a.nome) + '">' +
+        ic(ICONE_AREA[a.id] || "grid") + "<span>" + esc(a.nome) + '</span><i class="n">' + n + "</i></button>";
+    });
+  }
+  h += '<div class="nav-rule"></div>' +
+    '<button class="nav-item" data-ir="versoes" title="Versões"' + (st.tela === "versoes" ? ' aria-current="page"' : "") + ">" +
+    ic("clock") + "<span>Versões</span></button>";
+  $("#nav").innerHTML = h;
+
+  var nomeEmpresa = st.empresaAtiva ? st.empresaAtiva.nome : orgAtual().nome;
+  var botao = ic("org") + "<span><small>Empresa ativa</small><b>" + esc(nomeEmpresa) + "</b></span>" + ic("chevd");
+  $$(".company").forEach(function (b) { b.innerHTML = botao; });
+
+  $("#popEmpresa").innerHTML = st.empresas.length
+    ? "<h4>Trocar a empresa ativa</h4>" +
+      '<button class="mi" role="menuitemradio" aria-checked="' + (!st.empresaAtiva) + '" data-empresa="">Todas as empresas</button>' +
+      st.empresas.map(function (e) {
+        return '<button class="mi" role="menuitemradio" aria-checked="' +
+          (!!st.empresaAtiva && st.empresaAtiva.id === e.id) + '" data-empresa="' + esc(e.id) + '">' + esc(e.nome) + "</button>";
+      }).join("")
+    : '<h4>Empresas</h4><div style="padding:6px 10px 12px;color:var(--ink-2);font-size:14px">Nenhuma empresa cadastrada ainda. O portal está mostrando a organização.</div>';
+
+  $("#btnPerfil").innerHTML =
+    '<div class="avatar">' + esc(iniciais(st.perfil.nome)) + "</div>" +
+    "<span><b>" + esc(st.perfil.nome) + "</b><small>" + esc(rotuloPapel(st.papel)) + "</small></span>" + ic("chevd");
+
+  $("#popPerfil").innerHTML =
+    "<h4>" + esc(st.perfil.email || "") + "</h4>" +
+    '<button class="mi" data-acao="trocarSenha">Trocar minha senha</button>' +
+    "<hr><h4>Aparência</h4><div class=\"seg\">" +
+    [["auto", "Auto"], ["light", "Claro"], ["dark", "Escuro"]].map(function (t) {
+      return '<button data-tema="' + t[0] + '" aria-pressed="' + (st.tema === t[0]) + '">' + t[1] + "</button>";
+    }).join("") + "</div><hr>" +
+    '<button class="mi" data-acao="sair">' + ic("sair") + "Sair</button>";
+}
+
+function rotuloPapel(p) {
+  return { superadmin: "Superadministrador", admin: "Administrador", operador: "Operador", cliente: "Cliente" }[p] || p;
+}
+
+function agrupar() {
+  var mapa = {}, ordem = [];
+  st.catalogo.forEach(function (a) {
+    if (!mapa[a.area_id]) { mapa[a.area_id] = { id: a.area_id, nome: a.area_nome, apps: [] }; ordem.push(mapa[a.area_id]); }
+    mapa[a.area_id].apps.push(a);
+  });
+  return ordem;
+}
+
+/* ------------------------------------------------------------------
+   7. TELAS
+------------------------------------------------------------------- */
+var T = {};
+
+function saudacao() {
+  var h = new Date().getHours();
+  return h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
+}
+function hoje() {
+  var s = new Date().toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function cartao(a) {
+  var fav = st.favoritos.indexOf(a.app_id) > -1;
+  var tile = '<span class="tile ' + esc(a.area_id) + ' lg">' + ic(iconeDe(a)) + "</span>";
+
+  if (a.estado === "abrir") {
+    return '<article class="card open hover-go"><div class="card-top">' + tile +
+      '<button class="star" data-fav="' + esc(a.app_id) + '" aria-pressed="' + fav + '" aria-label="Favorito">' + ic("star") + "</button></div>" +
+      "<h3>" + esc(a.nome) + "</h3><p>" + esc(a.descricao || "") + "</p>" +
+      '<div class="card-foot"><span class="status ' + (CLASSE_SITUACAO[a.situacao] || "") + '">' +
+      esc(ROTULO_SITUACAO[a.situacao] || a.situacao) + "</span>" +
+      '<button class="go" data-abrir="' + esc(a.app_id) + '">Acessar' + ic("arrow") + "</button></div></article>";
+  }
+  if (a.estado === "preparacao") {
+    return '<article class="card prep"><div class="card-top"><span class="tile lg">' + ic(iconeDe(a)) + "</span></div>" +
+      "<h3>" + esc(a.nome) + "</h3><p>" + esc(a.descricao || "") + "</p>" +
+      '<div class="card-foot"><span class="status prep">Em preparação</span></div></article>';
+  }
+  var textos = {
+    solicitar: ["Contratado pela organização", "Solicitar acesso", "O pedido vai para um administrador."],
+    contratar: ["Fora do seu plano", "Conhecer o plano", "A Artecon apresenta as condições."],
+    suspenso:  ["Suspenso", "Regularizar", "Assinatura ou acesso em regularização."]
+  }[a.estado] || ["Indisponível", "", ""];
+
+  return '<article class="card locked"><div class="card-top"><span class="tile lg">' + ic("lock") + "</span></div>" +
+    "<h3>" + esc(a.nome) + "</h3><p>" + esc(a.descricao || "") + "</p>" +
+    '<div class="card-foot"><span class="status' + (a.estado === "suspenso" ? " sus" : "") + '">' + textos[0] + "</span>" +
+    (textos[1] ? '<button class="go ghost" data-pedir="' + esc(a.estado) + '" data-app="' + esc(a.nome) + '">' + textos[1] + "</button>" : "") +
+    '</div><div class="why">' + textos[2] + "</div></article>";
+}
+
+T.inicio = function () {
+  var abertos = st.catalogo.filter(function (a) { return a.estado === "abrir"; });
+  var areas = agrupar().filter(function (a) { return a.apps.some(function (x) { return x.estado === "abrir"; }); });
+
+  var favs = st.favoritos
+    .map(function (id) { return abertos.filter(function (a) { return a.app_id === id; })[0]; })
+    .filter(Boolean);
+
+  var recentes = st.recentes
+    .map(function (r) {
+      var a = abertos.filter(function (x) { return x.app_id === r.id; })[0];
+      return a ? { app: a, quando: r.quando } : null;
+    }).filter(Boolean).slice(0, 5);
+
+  var cartoesArea = areas.map(function (a) {
+    var n = a.apps.filter(function (x) { return x.estado === "abrir"; }).length;
+    var aviso = a.apps.filter(function (x) { return x.estado === "abrir" && x.situacao !== "operando"; }).length;
+    return '<button class="area hover-go" data-area="' + esc(a.id) + '">' +
+      '<span class="tile lg ' + esc(a.id) + '">' + ic(ICONE_AREA[a.id] || "grid") + "</span>" +
+      "<h3>" + esc(a.nome) + "</h3>" +
+      "<p>" + esc(resumirApps(a.apps.filter(function (x) { return x.estado === "abrir"; }))) + "</p>" +
+      '<span class="area-foot"><span class="status ' + (aviso ? "inst" : "op") + '">' +
+      (aviso ? aviso + (aviso === 1 ? " com aviso" : " com avisos") : n + (n === 1 ? " liberado" : " liberados")) +
+      '</span><span class="go">Acessar' + ic("arrow") + "</span></span></button>";
+  }).join("");
+
+  var h =
+    '<div class="dash"><div class="center">' +
+    '<section class="hero"><div class="hero-text">' +
+    '<span class="eyebrow">' + saudacao() + ", " + esc((st.perfil.nome || "").split(" ")[0]) + "</span>" +
+    "<h1>Bem-vindo ao<br>Portal <em>Artecon</em></h1>" +
+    "<p>" + esc(hoje()) + ". Você tem <b>" + abertos.length +
+    (abertos.length === 1 ? " aplicativo liberado" : " aplicativos liberados") + "</b>.</p>" +
+    '<button class="btn primary" data-ir="apps">Ver todos os aplicativos' + ic("arrow") + "</button>" +
+    "</div>" + fachada() + "</section>";
+
+  h += '<section><div class="sec-head"><div><h2>Acesse por área</h2>' +
+    "<p>Só aparecem as áreas com aplicativos liberados para você.</p></div>" +
+    '<button class="link" data-ir="apps">Ver todos' + ic("arrow") + "</button></div>" +
+    (cartoesArea ? '<div class="areas">' + cartoesArea + "</div>"
+                 : '<section class="panel"><div class="vazio"><b>Nenhum aplicativo liberado</b>Fale com um administrador.</div></section>') +
+    "</section>";
+
+  h += '<div class="pair">' +
+    '<section class="panel"><div class="panel-head"><h2>' + ic("star") + "Favoritos</h2>" +
+    '<button class="link" data-ir="apps">Editar</button></div>' +
+    (favs.length ? favs.map(function (a) {
+      return '<div class="row-li"><span class="tile ' + esc(a.area_id) + '">' + ic(iconeDe(a)) + "</span>" +
+        '<button data-abrir="' + esc(a.app_id) + '" style="flex:1;min-width:0;text-align:left">' +
+        '<b style="display:block;font-weight:600">' + esc(a.nome) + "</b>" +
+        '<small style="color:var(--ink-2);font-size:12.5px">' + esc(a.area_nome) + "</small></button>" +
+        '<button class="star" data-fav="' + esc(a.app_id) + '" aria-pressed="true" aria-label="Tirar dos favoritos">' + ic("star") + "</button></div>";
+    }).join("") : '<div class="vazio"><b>Nenhum favorito</b>Marque a estrela de um aplicativo.</div>') +
+    "</section>" +
+
+    '<section class="panel"><div class="panel-head"><h2>' + ic("clock") + "Acessados recentemente</h2></div>" +
+    (recentes.length ? recentes.map(function (r) {
+      return '<button class="row-li" data-abrir="' + esc(r.app.app_id) + '">' +
+        '<span class="tile sm ' + esc(r.app.area_id) + '">' + ic(iconeDe(r.app)) + "</span>" +
+        "<div><b>" + esc(r.app.nome) + "</b><small>" + esc(r.app.area_nome) + "</small></div>" +
+        "<time>" + esc(quandoTexto(r.quando)) + "</time></button>";
+    }).join("") : '<div class="vazio"><b>Nada ainda</b>Os aplicativos que você abrir aparecem aqui.</div>') +
+    "</section></div>";
+
+  h += "</div>" + lateral() + "</div>";
+  return h;
+};
+
+function resumirApps(lista) {
+  var nomes = lista.map(function (x) { return x.nome; });
+  if (nomes.length <= 3) return nomes.join(", ");
+  return nomes.slice(0, 3).join(", ") + " e mais " + (nomes.length - 3);
+}
+
+function quandoTexto(iso) {
+  var min = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+  if (min < 1) return "agora";
+  if (min < 60) return "há " + min + " min";
+  var hrs = Math.round(min / 60);
+  if (hrs < 24) return "há " + hrs + (hrs === 1 ? " hora" : " horas");
+  var d = Math.round(hrs / 24);
+  return d === 1 ? "ontem" : "há " + d + " dias";
+}
+
+function lateral() {
+  var abertos = st.catalogo.filter(function (a) { return a.estado === "abrir"; }).length;
+  var pedir = st.catalogo.filter(function (a) { return a.estado === "solicitar"; }).length;
+  var avisos = st.catalogo.filter(function (a) { return a.estado === "abrir" && a.situacao !== "operando"; });
+
+  return '<div class="rail">' +
+    '<section class="quote"><p>“Dados organizados geram grandes decisões.”</p><i></i>' +
+    "<small>Artecon Artes Contábeis</small>" +
+    '<svg viewBox="0 0 71 124" aria-hidden="true" style="--lg-ink:var(--line);--lg-paper:var(--surface)"><use href="#lgm"/></svg></section>' +
+
+    '<section class="panel"><div class="panel-head"><h2>Seu acesso</h2></div>' +
+    '<div class="row-li"><span class="tile sm gestao">' + ic("grid") + "</span>" +
+    "<div><b>" + abertos + (abertos === 1 ? " aplicativo" : " aplicativos") + "</b><small>liberados para você</small></div></div>" +
+    '<div class="row-li"><span class="tile sm adm">' + ic("lock") + "</span>" +
+    "<div><b>" + pedir + "</b><small>podem ser solicitados</small></div></div>" +
+    '<div class="row-li"><span class="tile sm dp">' + ic("person") + "</span>" +
+    "<div><b>" + esc(rotuloPapel(st.papel)) + "</b><small>seu papel em " + esc(orgAtual().nome) + "</small></div></div>" +
+    "</section>" +
+
+    (avisos.length
+      ? '<section class="panel"><div class="panel-head"><h2>Avisos de serviço</h2></div>' +
+        avisos.map(function (a) {
+          return '<div class="row-li"><span class="tile sm ' + esc(a.area_id) + '">' + ic(iconeDe(a)) + "</span>" +
+            "<div><b>" + esc(a.nome) + "</b><small>" + esc(ROTULO_SITUACAO[a.situacao]) + "</small></div></div>";
+        }).join("") + "</section>"
+      : "") +
+    "</div>";
+}
+
+function fachada() {
+  var s = '<svg class="hero-art" viewBox="0 0 560 256" preserveAspectRatio="xMaxYMid slice" aria-hidden="true">' +
+    '<defs><linearGradient id="fL" x1="0" x2="1"><stop offset="0" stop-color="var(--b3)"/><stop offset="1" stop-color="var(--b1)"/></linearGradient>' +
+    '<linearGradient id="fR" x1="0" x2="1"><stop offset="0" stop-color="var(--b2)"/><stop offset="1" stop-color="var(--b1)"/></linearGradient>' +
+    '<linearGradient id="fade" x1="0" x2="1"><stop offset="0" stop-color="var(--hero-a)"/><stop offset=".55" stop-color="var(--hero-a)" stop-opacity="0"/></linearGradient></defs>' +
+    '<polygon points="330,0 560,0 560,256 250,256" fill="var(--b4)" opacity=".25"/>' +
+    '<polygon points="120,256 120,150 330,22 330,256" fill="url(#fL)"/>' +
+    '<polygon points="330,22 560,96 560,256 330,256" fill="url(#fR)"/>';
+  for (var k = 1; k < 9; k++) {
+    s += '<line x1="330" y1="' + (22 + k * 30) + '" x2="120" y2="' + (150 + k * 15) + '" stroke="#fff" stroke-opacity=".16"/>';
+    s += '<line x1="330" y1="' + (22 + k * 30) + '" x2="560" y2="' + (96 + k * 21) + '" stroke="#fff" stroke-opacity=".08"/>';
+  }
+  for (var j = 1; j < 7; j++) {
+    var x = 330 - j * 34;
+    s += '<line x1="' + x + '" y1="' + (22 + j * 20.7) + '" x2="' + x + '" y2="256" stroke="#fff" stroke-opacity=".13"/>';
+  }
+  s += '<line x1="330" y1="22" x2="330" y2="256" stroke="#fff" stroke-opacity=".35"/>';
+  s += '<g transform="translate(352,58) skewY(17.800)" style="--lg-ink:#FFFFFF;--lg-paper:#4A4648;--lg-rd:#FFFFFF;--lg-yl:#FFFFFF;--lg-cy:#FFFFFF">' +
+    '<svg x="0" y="0" width="172" height="91" viewBox="0 0 392 207"><use href="#lg"/></svg></g>';
+  return s + '<rect width="560" height="256" fill="url(#fade)"/></svg>';
+}
+
+T.apps = function () {
+  var abertos = st.catalogo.filter(function (a) { return a.estado === "abrir"; }).length;
+  var h = '<div class="page-head"><div><h1>Aplicativos</h1>' +
+    "<p>Você vê o que está liberado para o seu usuário: " + abertos +
+    (abertos === 1 ? " aplicativo" : " aplicativos") +
+    ". A liberação é decidida no servidor; esta tela apenas reflete.</p></div></div>";
+
+  agrupar().forEach(function (a) {
+    var lista = a.apps.filter(function (x) { return x.estado !== "contratar" || souAdmin(); });
+    if (!lista.length) return;
+    var n = lista.filter(function (x) { return x.estado === "abrir"; }).length;
+    h += '<section class="dept" id="area-' + esc(a.id) + '"><div class="dept-head">' +
+      '<span class="tile sm ' + esc(a.id) + '">' + ic(ICONE_AREA[a.id] || "grid") + "</span>" +
+      "<h2>" + esc(a.nome) + "</h2><span>" + n + (n === 1 ? " liberado" : " liberados") + "</span></div>" +
+      '<div class="grid">' + lista.map(cartao).join("") + "</div></section>";
+  });
+  return h;
+};
+
+T.versoes = function () {
+  return '<div class="page-head"><div><h1>Versões</h1>' +
+    "<p>Toda entrega sobe o número no selo e ganha uma linha aqui.</p></div>" +
+    '<span class="ver" style="font-size:14px;padding:6px 12px">' + VERSAO + "</span></div>" +
+    '<section class="panel"><ul class="log">' +
+    VERSOES.map(function (v) {
+      return "<li><b>" + v[0] + '</b><span style="color:var(--ink-2)">' + v[1] + "</span><span>" + v[2] + "</span></li>";
+    }).join("") + "</ul></section>";
+};
+
+/* ---------- Acessos (administrador) ---------- */
+T.acessos = function () {
+  if (!souAdmin()) return semPermissao();
+  carregarAcessos();
+  return '<div class="page-head"><div><h1>Acessos</h1>' +
+    "<p>Quem entra em quê. Conceder e revogar aqui é o mesmo que o núcleo registra na auditoria.</p></div></div>" +
+    '<section class="panel" id="painelAcessos"><div class="carregando"><div class="spin"></div>Carregando…</div></section>';
+};
+
+function carregarAcessos() {
+  var core = sb.schema("core");
+  Promise.all([
+    core.from("memberships").select("user_id,papel,situacao").eq("org_id", st.org).order("papel"),
+    core.from("profiles").select("user_id,nome,email,situacao"),
+    core.from("app_access").select("id,user_id,app_id,papel,situacao,validade").eq("org_id", st.org)
+  ]).then(function (r) {
+    if (r[0].error) throw r[0].error;
+    var vinculos = r[0].data || [], perfis = r[1].data || [], acessos = r[2].data || [];
+    var porId = {}; perfis.forEach(function (p) { porId[p.user_id] = p; });
+    var apps = {}; st.catalogo.forEach(function (a) { apps[a.app_id] = a; });
+
+    var linhas = vinculos.map(function (v) {
+      var p = porId[v.user_id] || { nome: "(sem cadastro)", email: "" };
+      var meus = acessos.filter(function (a) { return a.user_id === v.user_id && a.situacao === "ativo"; });
+      var chips = meus.length
+        ? meus.map(function (a) {
+            var nome = apps[a.app_id] ? apps[a.app_id].nome : a.app_id;
+            return '<span class="tag ok">' + esc(nome) + (a.papel === "admin" ? " · adm" : "") + "</span>";
+          }).join(" ")
+        : '<span class="tag">nenhum</span>';
+      return "<tr><td><b>" + esc(p.nome) + '</b><br><small style="color:var(--ink-2)">' + esc(p.email) + "</small></td>" +
+        '<td><span class="tag ' + (v.papel === "operador" ? "" : "adm") + '">' + esc(rotuloPapel(v.papel)) + "</span></td>" +
+        '<td><span class="tag ' + (v.situacao === "ativo" ? "ok" : "no") + '">' + esc(v.situacao) + "</span></td>" +
+        '<td style="white-space:normal">' + chips + "</td>" +
+        '<td><div class="acoes">' +
+        '<button class="mini" data-conceder="' + esc(v.user_id) + '">Liberar</button>' +
+        (meus.length ? '<button class="mini rd" data-revogar="' + esc(v.user_id) + '">Revogar</button>' : "") +
+        "</div></td></tr>";
+    }).join("");
+
+    $("#painelAcessos").innerHTML =
+      '<div style="overflow-x:auto"><table class="tb"><thead><tr>' +
+      "<th>Pessoa</th><th>Papel</th><th>Situação</th><th>Aplicativos liberados</th><th></th>" +
+      "</tr></thead><tbody>" + linhas + "</tbody></table></div>";
+  }).catch(function (e) {
+    $("#painelAcessos").innerHTML = '<div class="vazio"><b>Não deu para carregar</b>' + esc(explicar(e)) + "</div>";
+  });
+}
+
+function dialogoConceder(userId) {
+  var core = sb.schema("core");
+  core.from("profiles").select("nome,email").eq("user_id", userId).maybeSingle().then(function (r) {
+    var p = r.data || { nome: "" };
+    var opcoes = st.catalogo
+      .filter(function (a) { return a.situacao !== "preparacao" && a.situacao !== "descontinuado"; })
+      .map(function (a) { return '<option value="' + esc(a.app_id) + '">' + esc(a.nome) + " · " + esc(a.area_nome) + "</option>"; })
+      .join("");
+    abrirDialogo(
+      "<h2>Liberar aplicativo</h2><p>Para <b>" + esc(p.nome) + "</b>.</p>" +
+      '<div class="f"><label for="dApp">Aplicativo</label><select class="sel" id="dApp">' + opcoes + "</select></div>" +
+      '<div class="f"><label for="dPapel">Papel dentro do aplicativo</label><select class="sel" id="dPapel">' +
+      '<option value="operador">Operador</option><option value="admin">Administrador</option><option value="leitura">Leitura</option>' +
+      "</select></div>" +
+      '<div class="dlg-acoes"><button class="btn" data-fechar>Cancelar</button>' +
+      '<button class="btn primary" id="dOk">Liberar</button></div>',
+      function () {
+        $("#dOk").addEventListener("click", function () {
+          var btn = this; btn.disabled = true; btn.textContent = "Liberando…";
+          core.rpc("conceder_acesso", {
+            p_org: st.org, p_user: userId, p_app: $("#dApp").value, p_papel: $("#dPapel").value
+          }).then(function (r2) {
+            btn.disabled = false; btn.textContent = "Liberar";
+            if (r2.error) { toast(explicar(r2.error)); return; }
+            var res = r2.data || {};
+            if (res.ok) { $("#dlg").close(); toast("Acesso liberado"); carregarAcessos(); }
+            else toast("Recusado: " + (res.motivo || "sem motivo informado"));
+          });
+        });
+      }
+    );
+  });
+}
+
+function dialogoRevogar(userId) {
+  var core = sb.schema("core");
+  Promise.all([
+    core.from("profiles").select("nome").eq("user_id", userId).maybeSingle(),
+    core.from("app_access").select("app_id,papel").eq("org_id", st.org).eq("user_id", userId).eq("situacao", "ativo")
+  ]).then(function (r) {
+    var p = r[0].data || { nome: "" };
+    var apps = {}; st.catalogo.forEach(function (a) { apps[a.app_id] = a.nome; });
+    var opcoes = (r[1].data || []).map(function (a) {
+      return '<option value="' + esc(a.app_id) + '">' + esc(apps[a.app_id] || a.app_id) + "</option>";
+    }).join("");
+    if (!opcoes) { toast("Esta pessoa não tem acesso ativo."); return; }
+    abrirDialogo(
+      "<h2>Revogar acesso</h2><p>De <b>" + esc(p.nome) + "</b>. O histórico é preservado e a revogação fica registrada na auditoria.</p>" +
+      '<div class="f"><label for="rApp">Aplicativo</label><select class="sel" id="rApp">' + opcoes + "</select></div>" +
+      '<div class="dlg-acoes"><button class="btn" data-fechar>Cancelar</button>' +
+      '<button class="btn primary" id="rOk" style="background:var(--brand);border-color:var(--brand)">Revogar</button></div>',
+      function () {
+        $("#rOk").addEventListener("click", function () {
+          var btn = this; btn.disabled = true;
+          core.rpc("revogar_acesso", { p_org: st.org, p_user: userId, p_app: $("#rApp").value })
+            .then(function (r2) {
+              btn.disabled = false;
+              if (r2.error) { toast(explicar(r2.error)); return; }
+              var res = r2.data || {};
+              if (res.ok) { $("#dlg").close(); toast("Acesso revogado"); carregarAcessos(); }
+              else toast("Recusado: " + (res.motivo || ""));
+            });
+        });
+      }
+    );
+  });
+}
+
+/* ---------- Auditoria (administrador) ---------- */
+T.auditoria = function () {
+  if (!souAdmin()) return semPermissao();
+  carregarAuditoria();
+  return '<div class="page-head"><div><h1>Auditoria</h1>' +
+    "<p>Tudo que mexeu em acesso, inclusive o que foi recusado.</p></div></div>" +
+    '<section class="panel" id="painelAuditoria"><div class="carregando"><div class="spin"></div>Carregando…</div></section>';
+};
+
+function carregarAuditoria() {
+  var core = sb.schema("core");
+  Promise.all([
+    core.from("audit_log").select("ocorrido_em,ator_id,acao,alvo_tipo,alvo_id,app_id,resultado,motivo")
+        .eq("org_id", st.org).order("ocorrido_em", { ascending: false }).limit(100),
+    core.from("profiles").select("user_id,nome")
+  ]).then(function (r) {
+    if (r[0].error) throw r[0].error;
+    var linhas = r[0].data || [], perfis = {};
+    (r[1].data || []).forEach(function (p) { perfis[p.user_id] = p.nome; });
+    var apps = {}; st.catalogo.forEach(function (a) { apps[a.app_id] = a.nome; });
+
+    if (!linhas.length) {
+      $("#painelAuditoria").innerHTML = '<div class="vazio"><b>Nada registrado ainda</b>As decisões de acesso aparecem aqui.</div>';
+      return;
+    }
+    $("#painelAuditoria").innerHTML =
+      '<div style="overflow-x:auto"><table class="tb"><thead><tr>' +
+      "<th>Quando</th><th>Quem</th><th>Ação</th><th>Alvo</th><th>Resultado</th><th>Motivo</th>" +
+      "</tr></thead><tbody>" +
+      linhas.map(function (l) {
+        var d = new Date(l.ocorrido_em);
+        return "<tr><td>" + d.toLocaleDateString("pt-BR") + " " +
+          d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) + "</td>" +
+          "<td>" + esc(perfis[l.ator_id] || "—") + "</td>" +
+          "<td>" + esc((l.acao || "").replace(/_/g, " ")) + "</td>" +
+          "<td>" + esc(apps[l.app_id] || perfis[l.alvo_id] || l.alvo_tipo || "—") + "</td>" +
+          '<td><span class="tag ' + (l.resultado === "permitido" ? "ok" : "no") + '">' + esc(l.resultado) + "</span></td>" +
+          '<td style="white-space:normal;color:var(--ink-2)">' + esc(l.motivo || "") + "</td></tr>";
+      }).join("") + "</tbody></table></div>";
+  }).catch(function (e) {
+    $("#painelAuditoria").innerHTML = '<div class="vazio"><b>Não deu para carregar</b>' + esc(explicar(e)) + "</div>";
+  });
+}
+
+function semPermissao() {
+  return '<div class="page-head"><div><h1>Sem permissão</h1>' +
+    "<p>Esta tela é de administrador.</p></div></div>";
+}
+
+/* ------------------------------------------------------------------
+   8. AÇÕES
+------------------------------------------------------------------- */
+function abrirApp(id) {
+  var a = st.catalogo.filter(function (x) { return x.app_id === id; })[0];
+  if (!a) return;
+  if (a.estado !== "abrir") { toast("Este aplicativo não está liberado para você."); return; }
+
+  st.recentes = [{ id: id, quando: new Date().toISOString() }]
+    .concat(st.recentes.filter(function (r) { return r.id !== id; })).slice(0, 8);
+  guardar("rec_" + st.sessao.user.id, st.recentes);
+
+  var destino = a.destino_url || "";
+  if (/^https?:\/\//i.test(destino)) window.open(destino, "_blank", "noopener");
+  else toast("Esta tela ainda está sendo preparada dentro do portal.");
+  if (st.tela === "inicio") desenhar();
+}
+
+function alternarFavorito(id) {
+  var i = st.favoritos.indexOf(id);
+  if (i > -1) st.favoritos.splice(i, 1); else st.favoritos.push(id);
+  guardar("fav_" + st.sessao.user.id, st.favoritos);
+  desenhar();
+  toast(i > -1 ? "Tirado dos favoritos" : "Marcado como favorito");
+}
+
+function trocarSenha() {
+  fecharPops();
+  abrirDialogo(
+    "<h2>Trocar minha senha</h2><p>A nova senha precisa de pelo menos 8 caracteres.</p>" +
+    '<div class="f"><label for="s1">Nova senha</label><input id="s1" type="password" autocomplete="new-password"></div>' +
+    '<div class="f"><label for="s2">Repita a nova senha</label><input id="s2" type="password" autocomplete="new-password"></div>' +
+    '<div class="dlg-acoes"><button class="btn" data-fechar>Cancelar</button>' +
+    '<button class="btn primary" id="sOk">Trocar senha</button></div>',
+    function () {
+      $("#sOk").addEventListener("click", function () {
+        var a = $("#s1").value, b = $("#s2").value;
+        if (a.length < 8) { toast("A senha precisa de pelo menos 8 caracteres."); return; }
+        if (a !== b) { toast("As duas senhas não conferem."); return; }
+        var btn = this; btn.disabled = true; btn.textContent = "Trocando…";
+        sb.auth.updateUser({ password: a }).then(function (r) {
+          btn.disabled = false; btn.textContent = "Trocar senha";
+          if (r.error) { toast(explicar(r.error)); return; }
+          $("#dlg").close(); toast("Senha trocada");
+        });
+      });
+    }
+  );
+}
+
+function abrirDialogo(html, depois) {
+  $("#dlgIn").innerHTML = html;
+  $("#dlg").showModal();
+  if (depois) depois();
+}
+function fecharPops() { $$(".pop").forEach(function (p) { p.hidden = true; }); }
+
+function tema(t) {
+  st.tema = t;
+  if (t === "auto") delete document.documentElement.dataset.tema, document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", t);
+  guardar("tema", t);
+}
+
+/* ------------------------------------------------------------------
+   9. PESQUISA
+------------------------------------------------------------------- */
+var achados = [], destaque = 0;
+
+function pesquisar() {
+  var q = $("#busca").value.trim().toLowerCase(), caixa = $("#resultados");
+  if (!q) { caixa.hidden = true; return; }
+  var bate = function (s) { return (s || "").toLowerCase().indexOf(q) > -1; };
+
+  var apps = st.catalogo.filter(function (a) {
+    return a.estado === "abrir" && (bate(a.nome) || bate(a.descricao));
+  }).slice(0, 6);
+  var empresas = st.empresas.filter(function (e) { return bate(e.nome); }).slice(0, 4);
+
+  achados = apps.map(function (a) { return { f: function () { abrirApp(a.app_id); } }; })
+    .concat(empresas.map(function (e) {
+      return { f: function () { st.empresaAtiva = e; guardar("empresa", e.id); desenhar(); toast("Empresa ativa: " + e.nome); } };
+    }));
+
+  destaque = 0;
+  var i = 0, h = "";
+  if (apps.length) {
+    h += "<h4>Aplicativos</h4>" + apps.map(function (a) {
+      return '<button data-achado="' + (i++) + '"><span class="tile sm ' + esc(a.area_id) + '">' + ic(iconeDe(a)) + "</span>" +
+        "<span>" + esc(a.nome) + "</span><small>" + esc(a.area_nome) + "</small></button>";
+    }).join("");
+  }
+  if (empresas.length) {
+    h += "<h4>Empresas</h4>" + empresas.map(function (e) {
+      return '<button data-achado="' + (i++) + '">' + ic("org") + "<span>" + esc(e.nome) + "</span><small>Tornar ativa</small></button>";
+    }).join("");
+  }
+  caixa.innerHTML = h || '<div class="none">Nada encontrado. A pesquisa só alcança o que está liberado para você.</div>';
+  caixa.hidden = false;
+  marcar();
+}
+function marcar() { $$("[data-achado]").forEach(function (b, i) { b.classList.toggle("on", i === destaque); }); }
+function irAchado(i) {
+  if (!achados[i]) return;
+  $("#busca").value = ""; $("#resultados").hidden = true; $("#top").classList.remove("searching");
+  achados[i].f();
+}
+
+/* ------------------------------------------------------------------
+   10. DESENHO E NAVEGAÇÃO
+------------------------------------------------------------------- */
+function desenhar() {
+  casca();
+  $("#tela").innerHTML = '<div class="view-in">' + (T[st.tela] || T.inicio)() + "</div>";
+}
+function ir(t) {
+  st.tela = t;
+  $("#app").classList.remove("side-open");
+  desenhar();
+  scrollTo(0, 0);
+}
+
+document.addEventListener("click", function (e) {
+  var alvo = e.target.closest("[data-ir],[data-acao],[data-pop],[data-area],[data-abrir],[data-fav]," +
+    "[data-pedir],[data-empresa],[data-tema],[data-achado],[data-conceder],[data-revogar],[data-fechar]");
+
+  if (!e.target.closest(".pop-wrap") && !e.target.closest(".company-m")) fecharPops();
+  if (!e.target.closest(".search")) { var r = $("#resultados"); if (r) r.hidden = true; }
+  if (!alvo) return;
+  if (alvo.tagName === "A") e.preventDefault();
+
+  var d = alvo.dataset;
+
+  if (d.pop) {
+    var p = $("#" + d.pop), estava = p.hidden;
+    fecharPops(); p.hidden = !estava;
+    if (alvo.classList.contains("company-m")) $("#app").classList.remove("side-open");
+    return;
+  }
+  if (d.achado !== undefined) return irAchado(+d.achado);
+  if (d.ir) return ir(d.ir);
+  if (d.area) {
+    st.tela = "apps"; $("#app").classList.remove("side-open"); desenhar();
+    var el = $("#area-" + d.area); if (el) el.scrollIntoView(); else scrollTo(0, 0);
+    return;
+  }
+  if (d.abrir) return abrirApp(d.abrir);
+  if (d.fav) return alternarFavorito(d.fav);
+  if (d.pedir) {
+    toast({
+      solicitar: "Pedido registrado com um administrador do escritório.",
+      contratar: "A Artecon vai apresentar as condições de " + (d.app || "") + ".",
+      suspenso: "Fale com a Artecon para regularizar."
+    }[d.pedir] || "");
+    return;
+  }
+  if (d.empresa !== undefined) {
+    st.empresaAtiva = st.empresas.filter(function (x) { return x.id === d.empresa; })[0] || null;
+    guardar("empresa", st.empresaAtiva ? st.empresaAtiva.id : null);
+    fecharPops(); desenhar();
+    toast("Empresa ativa: " + (st.empresaAtiva ? st.empresaAtiva.nome : "todas"));
+    return;
+  }
+  if (d.tema) { tema(d.tema); casca(); return; }
+  if (d.conceder) return dialogoConceder(d.conceder);
+  if (d.revogar) return dialogoRevogar(d.revogar);
+  if (d.fechar !== undefined) return $("#dlg").close();
+
+  var a = d.acao;
+  if (a === "recolher") { st.recolhido = !st.recolhido; guardar("recolhido", st.recolhido); casca(); }
+  if (a === "abrirMenu") $("#app").classList.add("side-open");
+  if (a === "fecharMenu") $("#app").classList.remove("side-open");
+  if (a === "buscar") { $("#top").classList.add("searching"); $("#busca").focus(); }
+  if (a === "sair") sair();
+  if (a === "trocarSenha") trocarSenha();
+});
+
+document.addEventListener("keydown", function (e) {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+    e.preventDefault();
+    if ($("#app").hidden) return;
+    $("#top").classList.add("searching"); $("#busca").focus();
+    return;
+  }
+  if (document.activeElement === $("#busca")) {
+    if (e.key === "ArrowDown") { e.preventDefault(); destaque = Math.min(destaque + 1, achados.length - 1); marcar(); }
+    if (e.key === "ArrowUp") { e.preventDefault(); destaque = Math.max(destaque - 1, 0); marcar(); }
+    if (e.key === "Enter") { e.preventDefault(); irAchado(destaque); }
+    if (e.key === "Escape") { $("#busca").value = ""; $("#resultados").hidden = true; $("#busca").blur(); }
+    return;
+  }
+  if (e.key === "Escape") { fecharPops(); $("#app").classList.remove("side-open"); }
+});
+
+/* ------------------------------------------------------------------
+   11. PARTIDA
+------------------------------------------------------------------- */
+function partir() {
+  $("#verLogin").textContent = VERSAO;
+  st.tema = ler("tema", "auto");
+  tema(st.tema);
+  st.recolhido = innerWidth < 1100 ? true : ler("recolhido", false);
+
+  if (!window.supabase || !window.supabase.createClient) {
+    msgLogin("A biblioteca do Supabase não carregou. Confira a conexão.");
+    return;
+  }
+  if (!CFG.chave || CFG.chave.indexOf("COLE_AQUI") === 0) {
+    msgLogin("Falta configurar a chave do projeto no início do arquivo.");
+    return;
+  }
+
+  sb = window.supabase.createClient(CFG.url, CFG.chave, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+  });
+
+  ligarLogin();
+
+  sb.auth.getSession().then(function (r) {
+    if (r.data && r.data.session) iniciarSessao(r.data.session);
+  });
+
+  sb.auth.onAuthStateChange(function (evento) {
+    if (evento === "SIGNED_OUT") location.reload();
+  });
+}
+
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", partir);
+else partir();
+
+})();
+
+</script>
+</body>
+</html>
