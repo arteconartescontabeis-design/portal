@@ -503,13 +503,13 @@ select.sel{height:40px;padding:0 12px;border:1px solid var(--line);border-radius
 /* ------------------------------------------------------------------
    1. CONFIGURAÇÃO — ajuste antes de publicar
    ------------------------------------------------------------------
-   A chave "https://fbxelwhdiisfmnwrerbl.supabase.co/rest/v1/" (ou anon) é pública por natureza: ela vai para
+   A chave "publishable" (ou anon) é pública por natureza: ela vai para
    o navegador de qualquer visitante. Quem protege os dados é a RLS.
    NUNCA coloque aqui a chave service_role.
 ------------------------------------------------------------------- */
 var CFG = {
   url:   "https://fbxelwhdiisfmnwrerbl.supabase.co",
-  chave: "COLE_AQUI_A_CHAVE_PUBLISHABLE_OU_ANON"
+  chave: "https://fbxelwhdiisfmnwrerbl.supabase.co/rest/v1/"
 };
 
 var VERSAO = "v1.0.0";
