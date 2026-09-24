@@ -495,7 +495,7 @@ select.sel{height:40px;padding:0 12px;border:1px solid var(--line);border-radius
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 /* =====================================================================
-   PORTAL ARTECON  ·  v1.0.0
+   PORTAL ARTECON  ·  v1.1.0
    Porta de entrada dos aplicativos do escritório.
 
    O portal NÃO guarda dado operacional. Ele lê o núcleo central
@@ -517,11 +517,23 @@ select.sel{height:40px;padding:0 12px;border:1px solid var(--line);border-radius
 ------------------------------------------------------------------- */
 var CFG = {
   url:   "https://fbxelwhdiisfmnwrerbl.supabase.co",
-  chave: "sb_publishable_iRqjOGU1ialauv_wHYarbw_cRzspHH6"
+  chave: "sb_publishable_iRqjOGU1ialauv_wHYarbw_cRzspHH6",
+  /* v1.1.0: contas de aplicativos que têm login próprio (outro projeto Supabase).
+     O portal pede à função do projeto do aplicativo; ela confere a sessão e o papel
+     de administrador no núcleo antes de criar ou desativar a conta. */
+  provisionar: {
+    cobranca: "https://yeujqjtjqtegsnzwwazb.supabase.co/functions/v1/portal-provisionar"
+  }
 };
 
-var VERSAO = "v1.0.1";
+var VERSAO = "v1.1.0";
 var VERSOES = [
+  ["v1.1.0", "24/09/2026",
+   "Contas do Cobrança Pro criadas pelo portal: ao liberar o Cobrança Pro na tela de Acessos, " +
+   "o administrador define a senha provisória e o portal cria (ou reativa) o login da pessoa " +
+   "no Cobrança Pro, que pede a troca da senha no primeiro acesso. Revogar o Cobrança Pro " +
+   "desativa o login lá. A tela de Acessos mostra se a conta do Cobrança Pro existe e está ativa, " +
+   "com o botão Senha do Cobrança para criar a conta ou definir nova senha provisória."],
   ["v1.0.1", "21/09/2026",
    "Blocos do layout aprovado de volta ao Início: indicadores, pendências por prazo, " +
    "notificações, comunicados e a faixa institucional do rodapé. Enquanto cada aplicativo não " +
@@ -1172,7 +1184,8 @@ function carregarAcessos() {
       var chips = meus.length
         ? meus.map(function (a) {
             var nome = apps[a.app_id] ? apps[a.app_id].nome : a.app_id;
-            return '<span class="tag ok">' + esc(nome) + (a.papel === "admin" ? " · adm" : "") + "</span>";
+            var cob = a.app_id === "cobranca" ? ' data-cob-email="' + esc(p.email || "") + '"' : "";
+            return '<span class="tag ok"' + cob + '>' + esc(nome) + (a.papel === "admin" ? " · adm" : "") + "</span>";
           }).join(" ")
         : '<span class="tag">nenhum</span>';
       return "<tr><td><b>" + esc(p.nome) + '</b><br><small style="color:var(--ink-2)">' + esc(p.email) + "</small></td>" +
@@ -1182,6 +1195,7 @@ function carregarAcessos() {
         '<td><div class="acoes">' +
         '<button class="mini" data-conceder="' + esc(v.user_id) + '">Liberar</button>' +
         (meus.length ? '<button class="mini rd" data-revogar="' + esc(v.user_id) + '">Revogar</button>' : "") +
+        (meus.some(function (a) { return a.app_id === "cobranca"; }) ? '<button class="mini" data-contacob="' + esc(v.user_id) + '">Senha do Cobrança</button>' : "") +
         "</div></td></tr>";
     }).join("");
 
@@ -1189,6 +1203,7 @@ function carregarAcessos() {
       '<div style="overflow-x:auto"><table class="tb"><thead><tr>' +
       "<th>Pessoa</th><th>Papel</th><th>Situação</th><th>Aplicativos liberados</th><th></th>" +
       "</tr></thead><tbody>" + linhas + "</tbody></table></div>";
+    marcarContasCobranca();
   }).catch(function (e) {
     $("#painelAcessos").innerHTML = '<div class="vazio"><b>Não deu para carregar</b>' + esc(explicar(e)) + "</div>";
   });
@@ -1208,19 +1223,41 @@ function dialogoConceder(userId) {
       '<div class="f"><label for="dPapel">Papel dentro do aplicativo</label><select class="sel" id="dPapel">' +
       '<option value="operador">Operador</option><option value="admin">Administrador</option><option value="leitura">Leitura</option>' +
       "</select></div>" +
+      '<div id="dConta" hidden>' + campoSenha("dSenha") + "</div>" +
       '<div class="dlg-acoes"><button class="btn" data-fechar>Cancelar</button>' +
       '<button class="btn primary" id="dOk">Liberar</button></div>',
       function () {
+        var ajustar = function () {
+          var conta = temConta($("#dApp").value);
+          $("#dConta").hidden = !conta;
+          var leitura = $('#dPapel option[value="leitura"]');
+          leitura.disabled = conta; if (conta && $("#dPapel").value === "leitura") $("#dPapel").value = "operador";
+        };
+        $("#dApp").addEventListener("change", ajustar); ajustar();
         $("#dOk").addEventListener("click", function () {
-          var btn = this; btn.disabled = true; btn.textContent = "Liberando…";
-          core.rpc("conceder_acesso", {
-            p_org: st.org, p_user: userId, p_app: $("#dApp").value, p_papel: $("#dPapel").value
-          }).then(function (r2) {
-            btn.disabled = false; btn.textContent = "Liberar";
-            if (r2.error) { toast(explicar(r2.error)); return; }
+          var btn = this, app = $("#dApp").value, papel = $("#dPapel").value;
+          var senha = temConta(app) ? $("#dSenha").value.trim() : "";
+          if (temConta(app) && senha.length < 8) { toast("A senha provisória precisa de pelo menos 8 caracteres."); return; }
+          if (temConta(app) && !p.email) { toast("Pessoa sem e-mail no cadastro — não dá para criar a conta."); return; }
+          btn.disabled = true; btn.textContent = "Liberando…";
+          core.rpc("conceder_acesso", { p_org: st.org, p_user: userId, p_app: app, p_papel: papel }).then(function (r2) {
+            if (r2.error) { btn.disabled = false; btn.textContent = "Liberar"; toast(explicar(r2.error)); return; }
             var res = r2.data || {};
-            if (res.ok) { $("#dlg").close(); toast("Acesso liberado"); carregarAcessos(); }
-            else toast("Recusado: " + (res.motivo || "sem motivo informado"));
+            var jaTinha = !res.ok && /j[aá]|ativo|exist/i.test(res.motivo || "");
+            if (!res.ok && !(jaTinha && temConta(app))) {
+              btn.disabled = false; btn.textContent = "Liberar"; toast("Recusado: " + (res.motivo || "sem motivo informado")); return;
+            }
+            if (!temConta(app)) { $("#dlg").close(); toast("Acesso liberado"); carregarAcessos(); return; }
+            btn.textContent = "Criando a conta…";
+            provisionar(app, { acao: "criar", email: p.email, nome: p.nome, senha: senha, perfil: papel }).then(function (r3) {
+              btn.disabled = false; btn.textContent = "Liberar";
+              carregarAcessos();
+              if (!r3.ok) { $("#dlg").close(); toast("Acesso liberado no portal, mas a conta do Cobrança Pro não foi criada: " + (r3.erro || "") + " — use o botão Senha do Cobrança."); return; }
+              mostrarContaCriada(p.nome, p.email, senha, r3);
+            }).catch(function (e) {
+              btn.disabled = false; btn.textContent = "Liberar"; carregarAcessos();
+              $("#dlg").close(); toast("Acesso liberado, mas a conta do Cobrança Pro não foi criada (" + explicar(e) + "). Use o botão Senha do Cobrança.");
+            });
           });
         });
       }
@@ -1231,7 +1268,7 @@ function dialogoConceder(userId) {
 function dialogoRevogar(userId) {
   var core = sb.schema("core");
   Promise.all([
-    core.from("profiles").select("nome").eq("user_id", userId).maybeSingle(),
+    core.from("profiles").select("nome,email").eq("user_id", userId).maybeSingle(),
     core.from("app_access").select("app_id,papel").eq("org_id", st.org).eq("user_id", userId).eq("situacao", "ativo")
   ]).then(function (r) {
     var p = r[0].data || { nome: "" };
@@ -1253,13 +1290,101 @@ function dialogoRevogar(userId) {
               btn.disabled = false;
               if (r2.error) { toast(explicar(r2.error)); return; }
               var res = r2.data || {};
-              if (res.ok) { $("#dlg").close(); toast("Acesso revogado"); carregarAcessos(); }
-              else toast("Recusado: " + (res.motivo || ""));
+              if (!res.ok) { toast("Recusado: " + (res.motivo || "")); return; }
+              var appRev = $("#rApp").value;
+              $("#dlg").close(); carregarAcessos();
+              if (!temConta(appRev) || !p.email) { toast("Acesso revogado"); return; }
+              provisionar(appRev, { acao: "desativar", email: p.email }).then(function (r3) {
+                toast(r3.ok ? "Acesso revogado e login do Cobrança Pro desativado"
+                            : "Acesso revogado, mas o login do Cobrança Pro não foi desativado: " + (r3.erro || ""));
+              }).catch(function (e) { toast("Acesso revogado, mas o login do Cobrança Pro não foi desativado: " + explicar(e)); });
             });
         });
       }
     );
   });
+}
+
+
+/* ---------- v1.1.0: contas nos aplicativos com login próprio ---------- */
+function temConta(appId) { return !!(CFG.provisionar && CFG.provisionar[appId]); }
+function provisionar(appId, corpo) {
+  return sb.auth.getSession().then(function (r) {
+    var s = r.data && r.data.session;
+    if (!s) throw new Error("Sessão expirada — entre de novo.");
+    var dados = {}; for (var k in corpo) dados[k] = corpo[k]; dados.org = st.org;
+    return fetch(CFG.provisionar[appId], {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + s.access_token },
+      body: JSON.stringify(dados)
+    }).then(function (resp) {
+      return resp.json().catch(function () { return { ok: false, erro: "resposta inválida (" + resp.status + ")" }; });
+    });
+  });
+}
+function gerarSenha() {
+  var letras = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz", nums = "23456789", s = "";
+  var a = new Uint32Array(10); crypto.getRandomValues(a);
+  for (var i = 0; i < 10; i++) s += (i % 3 === 2 ? nums : letras).charAt(a[i] % (i % 3 === 2 ? nums.length : letras.length));
+  return s;
+}
+function campoSenha(id) {
+  return '<div class="f"><label for="' + id + '">Senha provisória do Cobrança Pro (mín. 8 caracteres)</label>' +
+    '<div style="display:flex;gap:8px"><input id="' + id + '" type="text" autocomplete="off" style="flex:1" value="' + gerarSenha() + '">' +
+    '<button class="btn" type="button" data-gerar="' + id + '">Gerar</button></div>' +
+    '<small style="color:var(--ink-2)">Entregue esta senha à pessoa — ela troca no primeiro acesso ao Cobrança Pro.</small></div>';
+}
+function mostrarContaCriada(nome, email, senha, res) {
+  abrirDialogo(
+    "<h2>Conta do Cobrança Pro " + (res.criado ? "criada" : "atualizada") + "</h2>" +
+    "<p><b>" + esc(nome || email) + "</b> já pode entrar no Cobrança Pro.</p>" +
+    '<div class="f"><label>E-mail</label><input readonly value="' + esc(email) + '"></div>' +
+    (senha ? '<div class="f"><label>Senha provisória</label><input readonly value="' + esc(senha) + '"></div>' +
+      '<p><small style="color:var(--ink-2)">Anote e entregue à pessoa. Esta senha não fica guardada no portal; no primeiro acesso o Cobrança Pro pede uma senha nova.</small></p>' : "") +
+    '<div class="dlg-acoes"><button class="btn primary" data-fechar>Pronto</button></div>'
+  );
+}
+function dialogoContaCobranca(userId) {
+  var core = sb.schema("core");
+  core.from("profiles").select("nome,email").eq("user_id", userId).maybeSingle().then(function (r) {
+    var p = r.data || {};
+    if (!p.email) { toast("Pessoa sem e-mail no cadastro."); return; }
+    abrirDialogo(
+      "<h2>Senha do Cobrança Pro</h2><p>Para <b>" + esc(p.nome || p.email) + "</b>. Cria a conta, se ainda não existir, " +
+      "ou define uma nova senha provisória e reativa a conta.</p>" +
+      '<div class="f"><label for="cPapel">Papel no Cobrança Pro</label><select class="sel" id="cPapel">' +
+      '<option value="operador">Operador</option><option value="admin">Administrador (diretor)</option></select></div>' +
+      campoSenha("cSenha") +
+      '<div class="dlg-acoes"><button class="btn" data-fechar>Cancelar</button><button class="btn primary" id="cOk">Salvar</button></div>',
+      function () {
+        $("#cOk").addEventListener("click", function () {
+          var btn = this, senha = $("#cSenha").value.trim();
+          if (senha.length < 8) { toast("A senha precisa de pelo menos 8 caracteres."); return; }
+          btn.disabled = true; btn.textContent = "Salvando…";
+          provisionar("cobranca", { acao: "criar", email: p.email, nome: p.nome, senha: senha, perfil: $("#cPapel").value })
+            .then(function (res) {
+              btn.disabled = false; btn.textContent = "Salvar";
+              if (!res.ok) { toast("Cobrança Pro: " + (res.erro || "não foi possível")); return; }
+              mostrarContaCriada(p.nome, p.email, senha, res); carregarAcessos();
+            }).catch(function (e) { btn.disabled = false; btn.textContent = "Salvar"; toast(explicar(e)); });
+        });
+      });
+  });
+}
+function marcarContasCobranca() {
+  var alvos = $$("[data-cob-email]");
+  if (!alvos.length) return;
+  provisionar("cobranca", { acao: "lista" }).then(function (res) {
+    if (!res.ok) { alvos.forEach(function (el) { el.title = "Situação da conta indisponível: " + (res.erro || ""); }); return; }
+    var mapa = {}; (res.contas || []).forEach(function (c) { mapa[c.email] = c; });
+    alvos.forEach(function (el) {
+      var c = mapa[(el.getAttribute("data-cob-email") || "").toLowerCase()];
+      var extra = document.createElement("span");
+      if (c && c.ativo) { extra.textContent = c.trocar_senha ? " · senha provisória" : " · conta ativa"; }
+      else { extra.textContent = c ? " · conta desativada" : " · sem conta"; el.className = "tag adm"; }
+      el.appendChild(extra);
+    });
+  }).catch(function () {});
 }
 
 /* ---------- Auditoria (administrador) ---------- */
@@ -1435,10 +1560,12 @@ function ir(t) {
 
 document.addEventListener("click", function (e) {
   var alvo = e.target.closest("[data-ir],[data-acao],[data-pop],[data-area],[data-abrir],[data-fav]," +
-    "[data-pedir],[data-empresa],[data-tema],[data-achado],[data-conceder],[data-revogar],[data-fechar],[data-scroll]");
+    "[data-pedir],[data-empresa],[data-tema],[data-achado],[data-conceder],[data-revogar],[data-contacob],[data-fechar],[data-scroll]");
 
   if (!e.target.closest(".pop-wrap") && !e.target.closest(".company-m")) fecharPops();
   if (!e.target.closest(".search")) { var r = $("#resultados"); if (r) r.hidden = true; }
+  var ger = e.target.closest("[data-gerar]");
+  if (ger) { var cx = $("#" + ger.getAttribute("data-gerar")); if (cx) cx.value = gerarSenha(); return; }
   if (!alvo) return;
   if (alvo.tagName === "A") e.preventDefault();
 
@@ -1478,6 +1605,7 @@ document.addEventListener("click", function (e) {
   if (d.tema) { tema(d.tema); casca(); return; }
   if (d.conceder) return dialogoConceder(d.conceder);
   if (d.revogar) return dialogoRevogar(d.revogar);
+  if (d.contacob) return dialogoContaCobranca(d.contacob);
   if (d.fechar !== undefined) return $("#dlg").close();
 
   var a = d.acao;
