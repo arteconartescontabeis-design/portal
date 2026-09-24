@@ -495,7 +495,7 @@ select.sel{height:40px;padding:0 12px;border:1px solid var(--line);border-radius
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 /* =====================================================================
-   PORTAL ARTECON  ·  v1.1.0
+   PORTAL ARTECON  ·  v1.2.0
    Porta de entrada dos aplicativos do escritório.
 
    O portal NÃO guarda dado operacional. Ele lê o núcleo central
@@ -521,13 +521,22 @@ var CFG = {
   /* v1.1.0: contas de aplicativos que têm login próprio (outro projeto Supabase).
      O portal pede à função do projeto do aplicativo; ela confere a sessão e o papel
      de administrador no núcleo antes de criar ou desativar a conta. */
+  /* v1.2.0: gestão de pessoas (criar, senha, excluir, reativar) — função do próprio projeto */
+  usuarios: "https://fbxelwhdiisfmnwrerbl.supabase.co/functions/v1/portal-usuarios",
   provisionar: {
     cobranca: "https://yeujqjtjqtegsnzwwazb.supabase.co/functions/v1/portal-provisionar"
   }
 };
 
-var VERSAO = "v1.1.0";
+var VERSAO = "v1.2.0";
 var VERSOES = [
+  ["v1.2.0", "24/09/2026",
+   "Tela de Acessos refeita para a gestão completa das pessoas: botão Nova pessoa (senha provisória " +
+   "definida aqui ou convite por e-mail), botão Aplicativos com liberação de cada aplicativo e o nível " +
+   "de cada um (Leitura, Operador ou Administrador), Redefinir senha (provisória aqui ou por e-mail), " +
+   "Excluir (tira todos os acessos, desativa a pessoa e bloqueia o login, preservando o histórico) e " +
+   "Reativar. Senha provisória, convite e e-mail de redefinição levam à tela de criar a senha no " +
+   "primeiro acesso. Tudo registrado na Auditoria."],
   ["v1.1.0", "24/09/2026",
    "Contas do Cobrança Pro criadas pelo portal: ao liberar o Cobrança Pro na tela de Acessos, " +
    "o administrador define a senha provisória e o portal cria (ou reativa) o login da pessoa " +
@@ -809,6 +818,8 @@ function carregarContexto() {
     var emp = ler("empresa", null);
     st.empresaAtiva = st.empresas.filter(function (e) { return e.id === emp; })[0] || null;
     desenhar();
+    var md = st.sessao.user && st.sessao.user.user_metadata;
+    if (st.precisaSenha || (md && md.trocar_senha)) trocarSenha(true);
   }).catch(function (e) {
     $("#tela").innerHTML =
       '<div class="page-head"><div><h1>Não deu para carregar</h1>' +
@@ -1162,7 +1173,8 @@ T.acessos = function () {
   if (!souAdmin()) return semPermissao();
   carregarAcessos();
   return '<div class="page-head"><div><h1>Acessos</h1>' +
-    "<p>Quem entra em quê. Conceder e revogar aqui é o mesmo que o núcleo registra na auditoria.</p></div></div>" +
+    "<p>Quem entra em quê. Tudo o que é feito aqui fica registrado na Auditoria.</p></div>" +
+    '<div><button class="btn primary" data-novapessoa="1">+ Nova pessoa</button></div></div>' +
     '<section class="panel" id="painelAcessos"><div class="carregando"><div class="spin"></div>Carregando…</div></section>';
 };
 
@@ -1178,6 +1190,7 @@ function carregarAcessos() {
     var porId = {}; perfis.forEach(function (p) { porId[p.user_id] = p; });
     var apps = {}; st.catalogo.forEach(function (a) { apps[a.app_id] = a; });
 
+    st.acessosCache = { perfis: porId, vinculos: vinculos, acessos: acessos };
     var linhas = vinculos.map(function (v) {
       var p = porId[v.user_id] || { nome: "(sem cadastro)", email: "" };
       var meus = acessos.filter(function (a) { return a.user_id === v.user_id && a.situacao === "ativo"; });
@@ -1193,9 +1206,13 @@ function carregarAcessos() {
         '<td><span class="tag ' + (v.situacao === "ativo" ? "ok" : "no") + '">' + esc(v.situacao) + "</span></td>" +
         '<td style="white-space:normal">' + chips + "</td>" +
         '<td><div class="acoes">' +
-        '<button class="mini" data-conceder="' + esc(v.user_id) + '">Liberar</button>' +
-        (meus.length ? '<button class="mini rd" data-revogar="' + esc(v.user_id) + '">Revogar</button>' : "") +
-        (meus.some(function (a) { return a.app_id === "cobranca"; }) ? '<button class="mini" data-contacob="' + esc(v.user_id) + '">Senha do Cobrança</button>' : "") +
+        (v.situacao !== "ativo"
+          ? '<button class="mini" data-reativar="' + esc(v.user_id) + '">Reativar</button>'
+          : '<button class="mini" data-apps="' + esc(v.user_id) + '">Aplicativos</button>' +
+            (v.user_id === st.sessao.user.id ? "" :
+              '<button class="mini" data-senha="' + esc(v.user_id) + '">Redefinir senha</button>' +
+              '<button class="mini rd" data-excluir="' + esc(v.user_id) + '">Excluir</button>') +
+            (meus.some(function (a) { return a.app_id === "cobranca"; }) ? '<button class="mini" data-contacob="' + esc(v.user_id) + '">Senha do Cobrança</button>' : "")) +
         "</div></td></tr>";
     }).join("");
 
@@ -1387,6 +1404,254 @@ function marcarContasCobranca() {
   }).catch(function () {});
 }
 
+
+/* ---------- v1.2.0: gestão de pessoas ---------- */
+function chamarUsuarios(corpo) {
+  return sb.auth.getSession().then(function (r) {
+    var s = r.data && r.data.session;
+    if (!s) throw new Error("Sessão expirada — entre de novo.");
+    var dados = {}; for (var k in corpo) dados[k] = corpo[k]; dados.org = st.org;
+    return fetch(CFG.usuarios, { method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + s.access_token, "apikey": CFG.chave },
+      body: JSON.stringify(dados) }).then(function (resp) {
+        return resp.json().catch(function () { return { ok: false, erro: "a função respondeu " + resp.status + " — confira se portal-usuarios está publicada" }; });
+      });
+  });
+}
+function nomeDe(userId) {
+  var c = st.acessosCache && st.acessosCache.perfis[userId];
+  return c ? (c.nome || c.email) : "";
+}
+function perfilDe(userId) { return (st.acessosCache && st.acessosCache.perfis[userId]) || {}; }
+
+function dialogoNovaPessoa() {
+  abrirDialogo(
+    "<h2>Nova pessoa</h2><p>Cria o login do portal e o vínculo com a organização. Os aplicativos você libera em seguida.</p>" +
+    '<div class="f"><label for="nNome">Nome completo</label><input id="nNome" autocomplete="off"></div>' +
+    '<div class="f"><label for="nEmail">E-mail</label><input id="nEmail" type="email" autocomplete="off"></div>' +
+    '<div class="f"><label for="nPapel">Papel no portal</label><select class="sel" id="nPapel"><option value="operador">Operador</option>' +
+    (st.papel === "superadmin" ? '<option value="admin">Administrador</option>' : "") + "</select></div>" +
+    '<div class="f"><label>Senha</label>' +
+    '<label style="display:flex;gap:8px;align-items:center;font-weight:400"><input type="radio" name="nModo" value="local" checked> Definir senha provisória aqui</label>' +
+    '<label style="display:flex;gap:8px;align-items:center;font-weight:400"><input type="radio" name="nModo" value="email"> Enviar convite por e-mail (a pessoa cria a senha)</label></div>' +
+    '<div id="nSenhaBox">' + campoSenhaGen("nSenha", "Senha provisória (mín. 8 caracteres)") + "</div>" +
+    '<div class="dlg-acoes"><button class="btn" data-fechar>Cancelar</button><button class="btn primary" id="nOk">Criar pessoa</button></div>',
+    function () {
+      $$('input[name="nModo"]').forEach(function (r) { r.addEventListener("change", function () {
+        $("#nSenhaBox").hidden = $('input[name="nModo"]:checked').value !== "local"; }); });
+      $("#nOk").addEventListener("click", function () {
+        var nome = $("#nNome").value.trim(), email = $("#nEmail").value.trim().toLowerCase();
+        var modo = $('input[name="nModo"]:checked').value, senha = $("#nSenha").value.trim();
+        if (nome.length < 3) { toast("Informe o nome completo."); return; }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { toast("E-mail inválido."); return; }
+        if (modo === "local" && senha.length < 8) { toast("A senha precisa de pelo menos 8 caracteres."); return; }
+        var btn = this; btn.disabled = true; btn.textContent = "Criando…";
+        chamarUsuarios({ acao: "criar", nome: nome, email: email, papel: $("#nPapel").value, modo: modo, senha: senha })
+          .then(function (res) {
+            btn.disabled = false; btn.textContent = "Criar pessoa";
+            if (!res.ok) { toast(res.erro || "Não foi possível criar."); return; }
+            carregarAcessos();
+            abrirDialogo(
+              "<h2>Pessoa criada</h2><p><b>" + esc(nome) + "</b> já faz parte da organização.</p>" +
+              (modo === "local"
+                ? '<div class="f"><label>E-mail</label><input readonly value="' + esc(email) + '"></div>' +
+                  '<div class="f"><label>Senha provisória do portal</label><input readonly value="' + esc(senha) + '"></div>' +
+                  '<p><small style="color:var(--ink-2)">Entregue à pessoa. No primeiro acesso o portal pede uma senha nova.</small></p>'
+                : "<p>O convite foi enviado para <b>" + esc(email) + "</b>. Pelo link, a pessoa cria a própria senha.</p>") +
+              '<div class="dlg-acoes"><button class="btn" data-fechar>Fechar</button>' +
+              '<button class="btn primary" data-apps="' + esc(res.user_id) + '">Liberar aplicativos agora</button></div>');
+          }).catch(function (e) { btn.disabled = false; btn.textContent = "Criar pessoa"; toast(explicar(e)); });
+      });
+    });
+}
+
+function campoSenhaGen(id, rotulo) {
+  return '<div class="f"><label for="' + id + '">' + rotulo + '</label>' +
+    '<div style="display:flex;gap:8px"><input id="' + id + '" type="text" autocomplete="off" style="flex:1" value="' + gerarSenha() + '">' +
+    '<button class="btn" type="button" data-gerar="' + id + '">Gerar</button></div></div>';
+}
+
+var NIVEIS = [["leitura", "Leitura"], ["operador", "Operador"], ["admin", "Administrador"]];
+function dialogoAplicativos(userId) {
+  var core = sb.schema("core");
+  Promise.all([
+    core.from("profiles").select("nome,email").eq("user_id", userId).maybeSingle(),
+    core.from("app_access").select("app_id,papel").eq("org_id", st.org).eq("user_id", userId).eq("situacao", "ativo")
+  ]).then(function (r) {
+    var p = r[0].data || {}, atuais = {};
+    (r[1].data || []).forEach(function (a) { atuais[a.app_id] = a.papel; });
+    var apps = st.catalogo.filter(function (a) { return a.situacao !== "preparacao" && a.situacao !== "descontinuado"; });
+    var porArea = {};
+    apps.forEach(function (a) { (porArea[a.area_nome || "Outros"] = porArea[a.area_nome || "Outros"] || []).push(a); });
+    var linhas = Object.keys(porArea).map(function (area) {
+      return '<div style="font-size:12px;font-weight:700;color:var(--ink-2);margin:12px 0 6px;text-transform:uppercase">' + esc(area) + "</div>" +
+        porArea[area].map(function (a) {
+          var nivel = atuais[a.app_id] || "", conta = temConta(a.app_id);
+          return '<div class="app-lib" data-app="' + esc(a.app_id) + '" data-antes="' + esc(nivel) + '" style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line)">' +
+            '<span style="flex:1;min-width:0">' + esc(a.nome) + "</span>" +
+            '<button type="button" class="mini ' + (nivel ? "" : "rd") + '" data-toggle="1" style="min-width:92px">' + (nivel ? "✓ Liberado" : "Liberar") + "</button>" +
+            '<select class="sel" data-nivel="1" style="width:140px"' + (nivel ? "" : " disabled") + ">" +
+            NIVEIS.map(function (n) {
+              var desab = conta && n[0] === "leitura";
+              return '<option value="' + n[0] + '"' + ((nivel || "operador") === n[0] ? " selected" : "") + (desab ? " disabled" : "") + ">" + n[1] + "</option>";
+            }).join("") + "</select></div>";
+        }).join("");
+    }).join("");
+    abrirDialogo(
+      "<h2>Aplicativos</h2><p>De <b>" + esc(p.nome || p.email) + "</b>. Libere cada aplicativo e escolha o nível.</p>" +
+      '<div style="max-height:52vh;overflow:auto;padding-right:4px">' + linhas + "</div>" +
+      '<div id="aCobSenha" hidden>' + campoSenhaGen("aSenha", "Senha provisória do Cobrança Pro (conta nova)") + "</div>" +
+      '<div class="dlg-acoes"><button class="btn" data-fechar>Cancelar</button><button class="btn primary" id="aOk">Salvar</button></div>',
+      function () {
+        $("#dlg").style.width = "min(640px,calc(100vw - 32px))";
+        var cobNova = function () {
+          var el = $('.app-lib[data-app="cobranca"]');
+          $("#aCobSenha").hidden = !(el && !el.getAttribute("data-antes") && el.getAttribute("data-on") === "1");
+        };
+        $$(".app-lib").forEach(function (row) {
+          row.setAttribute("data-on", row.getAttribute("data-antes") ? "1" : "0");
+          var bt = row.querySelector("[data-toggle]"), sel = row.querySelector("[data-nivel]");
+          bt.addEventListener("click", function () {
+            var on = row.getAttribute("data-on") !== "1";
+            row.setAttribute("data-on", on ? "1" : "0");
+            bt.textContent = on ? "✓ Liberado" : "Liberar"; bt.classList.toggle("rd", !on); sel.disabled = !on;
+            cobNova();
+          });
+        });
+        cobNova();
+        $("#aOk").addEventListener("click", function () { salvarAplicativos(userId, p, this); });
+      });
+  });
+}
+
+function salvarAplicativos(userId, p, btn) {
+  var core = sb.schema("core"), passos = [], avisos = [];
+  $$(".app-lib").forEach(function (row) {
+    var app = row.getAttribute("data-app"), antes = row.getAttribute("data-antes") || "";
+    var depois = row.getAttribute("data-on") === "1" ? row.querySelector("[data-nivel]").value : "";
+    if (antes !== depois) passos.push({ app: app, antes: antes, depois: depois });
+  });
+  if (!passos.length) { $("#dlg").close(); return; }
+  var senhaCob = $("#aSenha") ? $("#aSenha").value.trim() : "";
+  var cob = passos.filter(function (x) { return x.app === "cobranca" && !x.antes && x.depois; })[0];
+  if (cob && senhaCob.length < 8) { toast("A senha provisória do Cobrança precisa de pelo menos 8 caracteres."); return; }
+  btn.disabled = true; btn.textContent = "Salvando…";
+  var nomes = {}; st.catalogo.forEach(function (a) { nomes[a.app_id] = a.nome; });
+  var rpcOk = function (r, oque) {
+    if (r.error) throw new Error(nomes[oque] + ": " + explicar(r.error));
+    if (r.data && r.data.ok === false) throw new Error(nomes[oque] + ": " + (r.data.motivo || "recusado"));
+  };
+  var cadeia = Promise.resolve();
+  passos.forEach(function (x) {
+    cadeia = cadeia.then(function () {
+      var q = Promise.resolve();
+      if (x.antes) q = q.then(function () { return core.rpc("revogar_acesso", { p_org: st.org, p_user: userId, p_app: x.app }).then(function (r) { rpcOk(r, x.app); }); });
+      if (x.depois) q = q.then(function () { return core.rpc("conceder_acesso", { p_org: st.org, p_user: userId, p_app: x.app, p_papel: x.depois }).then(function (r) { rpcOk(r, x.app); }); });
+      if (temConta(x.app) && p.email) q = q.then(function () {
+        var corpo = x.depois ? { acao: "criar", email: p.email, nome: p.nome, perfil: x.depois } : { acao: "desativar", email: p.email };
+        if (x.depois && !x.antes) corpo.senha = senhaCob;
+        return provisionar(x.app, corpo).then(function (r3) {
+          if (!r3.ok) avisos.push(nomes[x.app] + ": liberado no portal, mas a conta do aplicativo não foi " + (x.depois ? "criada" : "desativada") + " (" + (r3.erro || "") + ")");
+        });
+      });
+      return q.catch(function (e) { avisos.push(e.message); });
+    });
+  });
+  cadeia.then(function () {
+    carregarAcessos();
+    var html = "<h2>Aplicativos atualizados</h2><p>" + esc(p.nome || p.email) + ": " + passos.length + " alteração(ões).</p>";
+    if (cob && !avisos.some(function (a) { return a.indexOf(nomes.cobranca) === 0; }))
+      html += '<div class="f"><label>Senha provisória do Cobrança Pro</label><input readonly value="' + esc(senhaCob) + '"></div>';
+    if (avisos.length) html += '<div class="vazio" style="text-align:left"><b>Atenção</b>' + avisos.map(esc).join("<br>") + "</div>";
+    abrirDialogo(html + '<div class="dlg-acoes"><button class="btn primary" data-fechar>Pronto</button></div>');
+  });
+}
+
+function dialogoSenhaPessoa(userId) {
+  var p = perfilDe(userId);
+  abrirDialogo(
+    "<h2>Redefinir senha</h2><p>Do portal, para <b>" + esc(p.nome || p.email) + "</b>. Nos dois casos a pessoa cria a senha dela no próximo acesso.</p>" +
+    campoSenhaGen("pSenha", "Senha provisória") +
+    '<div class="dlg-acoes" style="flex-wrap:wrap"><button class="btn" data-fechar>Cancelar</button>' +
+    '<button class="btn" id="pEmail">Enviar e-mail para ' + esc(p.email || "") + "</button>" +
+    '<button class="btn primary" id="pLocal">Definir esta senha</button></div>',
+    function () {
+      $("#pLocal").addEventListener("click", function () {
+        var senha = $("#pSenha").value.trim(), btn = this;
+        if (senha.length < 8) { toast("A senha precisa de pelo menos 8 caracteres."); return; }
+        btn.disabled = true;
+        chamarUsuarios({ acao: "senha_local", user_id: userId, senha: senha }).then(function (res) {
+          btn.disabled = false;
+          if (!res.ok) { toast(res.erro || "Não foi possível."); return; }
+          abrirDialogo("<h2>Senha provisória definida</h2><p>" + esc(p.nome || p.email) + "</p>" +
+            '<div class="f"><label>Senha provisória do portal</label><input readonly value="' + esc(senha) + '"></div>' +
+            '<p><small style="color:var(--ink-2)">No próximo acesso o portal pede uma senha nova. A senha do Cobrança Pro é separada (botão Senha do Cobrança).</small></p>' +
+            '<div class="dlg-acoes"><button class="btn primary" data-fechar>Pronto</button></div>');
+        }).catch(function (e) { btn.disabled = false; toast(explicar(e)); });
+      });
+      $("#pEmail").addEventListener("click", function () {
+        var btn = this; btn.disabled = true;
+        chamarUsuarios({ acao: "senha_email", user_id: userId }).then(function (res) {
+          btn.disabled = false;
+          if (!res.ok) { toast(res.erro || "Não foi possível enviar."); return; }
+          $("#dlg").close(); toast("E-mail de redefinição enviado para " + (res.email || p.email));
+        }).catch(function (e) { btn.disabled = false; toast(explicar(e)); });
+      });
+    });
+}
+
+function dialogoExcluir(userId) {
+  var p = perfilDe(userId), core = sb.schema("core");
+  var ativos = (st.acessosCache.acessos || []).filter(function (a) { return a.user_id === userId && a.situacao === "ativo"; });
+  abrirDialogo(
+    "<h2>Excluir pessoa</h2><p><b>" + esc(p.nome || p.email) + "</b> perde todos os acessos (" + ativos.length + " aplicativo(s)), " +
+    "é desativada na organização e o login fica bloqueado. O histórico da Auditoria é preservado e dá para reativar depois.</p>" +
+    '<div class="f"><label for="xConf">Para confirmar, digite EXCLUIR</label><input id="xConf" autocomplete="off"></div>' +
+    '<div class="dlg-acoes"><button class="btn" data-fechar>Cancelar</button>' +
+    '<button class="btn primary" id="xOk" style="background:var(--brand);border-color:var(--brand)">Excluir</button></div>',
+    function () {
+      $("#xOk").addEventListener("click", function () {
+        if ($("#xConf").value.trim().toUpperCase() !== "EXCLUIR") { toast("Digite EXCLUIR para confirmar."); return; }
+        var btn = this, avisos = []; btn.disabled = true; btn.textContent = "Excluindo…";
+        var cadeia = Promise.resolve();
+        ativos.forEach(function (a) {
+          cadeia = cadeia.then(function () {
+            return core.rpc("revogar_acesso", { p_org: st.org, p_user: userId, p_app: a.app_id }).then(function (r) {
+              if (r.error || (r.data && r.data.ok === false)) avisos.push(a.app_id + ": " + (r.error ? explicar(r.error) : r.data.motivo));
+              if (temConta(a.app_id) && p.email) return provisionar(a.app_id, { acao: "desativar", email: p.email }).then(function (r3) {
+                if (!r3.ok) avisos.push(a.app_id + ": login do aplicativo não desativado (" + (r3.erro || "") + ")");
+              });
+            });
+          });
+        });
+        cadeia.then(function () {
+          return core.rpc("desativar_usuario", { p_org: st.org, p_user: userId }).then(function (r) {
+            if (r.error || (r.data && r.data.ok === false)) avisos.push("desativar: " + (r.error ? explicar(r.error) : r.data.motivo));
+          });
+        }).then(function () {
+          return chamarUsuarios({ acao: "bloquear_login", user_id: userId }).then(function (res) {
+            if (!res.ok) avisos.push("bloqueio do login: " + (res.erro || ""));
+          });
+        }).catch(function (e) { avisos.push(explicar(e)); }).then(function () {
+          carregarAcessos();
+          if (!avisos.length) { $("#dlg").close(); toast("Pessoa excluída — acessos revogados e login bloqueado"); return; }
+          abrirDialogo('<h2>Excluída com avisos</h2><div class="vazio" style="text-align:left">' + avisos.map(esc).join("<br>") + "</div>" +
+            '<div class="dlg-acoes"><button class="btn primary" data-fechar>Fechar</button></div>');
+        });
+      });
+    });
+}
+
+function reativarPessoa(userId) {
+  var p = perfilDe(userId);
+  if (!confirm("Reativar " + (p.nome || p.email) + "? Os aplicativos precisam ser liberados de novo.")) return;
+  chamarUsuarios({ acao: "reativar", user_id: userId }).then(function (res) {
+    if (!res.ok) { toast(res.erro || "Não foi possível reativar."); return; }
+    toast("Pessoa reativada — libere os aplicativos");
+    carregarAcessos();
+  }).catch(function (e) { toast(explicar(e)); });
+}
+
 /* ---------- Auditoria (administrador) ---------- */
 T.auditoria = function () {
   if (!souAdmin()) return semPermissao();
@@ -1462,24 +1727,27 @@ function alternarFavorito(id) {
   toast(i > -1 ? "Tirado dos favoritos" : "Marcado como favorito");
 }
 
-function trocarSenha() {
+function trocarSenha(obrigatorio) {
   fecharPops();
   abrirDialogo(
-    "<h2>Trocar minha senha</h2><p>A nova senha precisa de pelo menos 8 caracteres.</p>" +
+    "<h2>" + (obrigatorio ? "Crie a sua senha" : "Trocar minha senha") + "</h2><p>" +
+    (obrigatorio ? "Você entrou com uma senha provisória, convite ou link de redefinição. Escolha a sua senha para continuar. " : "") +
+    "A nova senha precisa de pelo menos 8 caracteres.</p>" +
     '<div class="f"><label for="s1">Nova senha</label><input id="s1" type="password" autocomplete="new-password"></div>' +
     '<div class="f"><label for="s2">Repita a nova senha</label><input id="s2" type="password" autocomplete="new-password"></div>' +
-    '<div class="dlg-acoes"><button class="btn" data-fechar>Cancelar</button>' +
-    '<button class="btn primary" id="sOk">Trocar senha</button></div>',
+    '<div class="dlg-acoes">' + (obrigatorio ? '<button class="btn" id="sSair">Sair</button>' : '<button class="btn" data-fechar>Cancelar</button>') +
+    '<button class="btn primary" id="sOk">' + (obrigatorio ? "Salvar senha" : "Trocar senha") + '</button></div>',
     function () {
+      if (obrigatorio) { $("#dlg").dataset.obrigatorio = "1"; $("#sSair").addEventListener("click", sair); }
       $("#sOk").addEventListener("click", function () {
         var a = $("#s1").value, b = $("#s2").value;
         if (a.length < 8) { toast("A senha precisa de pelo menos 8 caracteres."); return; }
         if (a !== b) { toast("As duas senhas não conferem."); return; }
-        var btn = this; btn.disabled = true; btn.textContent = "Trocando…";
-        sb.auth.updateUser({ password: a }).then(function (r) {
-          btn.disabled = false; btn.textContent = "Trocar senha";
-          if (r.error) { toast(explicar(r.error)); return; }
-          $("#dlg").close(); toast("Senha trocada");
+        var btn = this; btn.disabled = true; btn.textContent = "Salvando…";
+        sb.auth.updateUser({ password: a, data: { trocar_senha: false } }).then(function (r) {
+          btn.disabled = false; btn.textContent = obrigatorio ? "Salvar senha" : "Trocar senha";
+          if (r.error) { toast(/same|different/i.test(r.error.message || "") ? "A nova senha precisa ser diferente da anterior." : explicar(r.error)); return; }
+          $("#dlg").dataset.obrigatorio = ""; st.precisaSenha = false; $("#dlg").close(); toast("Senha salva");
         });
       });
     }
@@ -1487,6 +1755,8 @@ function trocarSenha() {
 }
 
 function abrirDialogo(html, depois) {
+  $("#dlg").style.width = "";
+  $("#dlg").dataset.obrigatorio = "";
   $("#dlgIn").innerHTML = html;
   $("#dlg").showModal();
   if (depois) depois();
@@ -1560,7 +1830,7 @@ function ir(t) {
 
 document.addEventListener("click", function (e) {
   var alvo = e.target.closest("[data-ir],[data-acao],[data-pop],[data-area],[data-abrir],[data-fav]," +
-    "[data-pedir],[data-empresa],[data-tema],[data-achado],[data-conceder],[data-revogar],[data-contacob],[data-fechar],[data-scroll]");
+    "[data-pedir],[data-empresa],[data-tema],[data-achado],[data-conceder],[data-revogar],[data-contacob],[data-novapessoa],[data-apps],[data-senha],[data-excluir],[data-reativar],[data-fechar],[data-scroll]");
 
   if (!e.target.closest(".pop-wrap") && !e.target.closest(".company-m")) fecharPops();
   if (!e.target.closest(".search")) { var r = $("#resultados"); if (r) r.hidden = true; }
@@ -1606,6 +1876,11 @@ document.addEventListener("click", function (e) {
   if (d.conceder) return dialogoConceder(d.conceder);
   if (d.revogar) return dialogoRevogar(d.revogar);
   if (d.contacob) return dialogoContaCobranca(d.contacob);
+  if (d.novapessoa) return dialogoNovaPessoa();
+  if (d.apps) return dialogoAplicativos(d.apps);
+  if (d.senha) return dialogoSenhaPessoa(d.senha);
+  if (d.excluir) return dialogoExcluir(d.excluir);
+  if (d.reativar) return reativarPessoa(d.reativar);
   if (d.fechar !== undefined) return $("#dlg").close();
 
   var a = d.acao;
@@ -1614,7 +1889,7 @@ document.addEventListener("click", function (e) {
   if (a === "fecharMenu") $("#app").classList.remove("side-open");
   if (a === "buscar") { $("#top").classList.add("searching"); $("#busca").focus(); }
   if (a === "sair") sair();
-  if (a === "trocarSenha") trocarSenha();
+  if (a === "trocarSenha") trocarSenha(false);
 });
 
 document.addEventListener("keydown", function (e) {
@@ -1664,9 +1939,13 @@ function partir() {
 
   sb.auth.onAuthStateChange(function (evento) {
     if (evento === "SIGNED_OUT") location.reload();
+    if (evento === "PASSWORD_RECOVERY") { st.precisaSenha = true; if (st.catalogo) trocarSenha(true); }
   });
 }
 
+document.addEventListener("cancel", function (e) {
+  if (e.target && e.target.id === "dlg" && e.target.dataset.obrigatorio === "1") e.preventDefault();
+}, true);
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", partir);
 else partir();
 
