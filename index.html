@@ -385,6 +385,52 @@ select.sel{height:40px;padding:0 12px;border:1px solid var(--line);border-radius
 .vazio{padding:34px 12px;text-align:center;color:var(--ink-2)}
 .vazio b{display:block;color:var(--ink);margin-bottom:4px}
 @media (max-width:860px){.login-wrap{grid-template-columns:minmax(0,1fr)}.login-art{display:none}}
+/* ===== v1.3.0: Consumo de IA ===== */
+:root{--ia-atp:#00AEEF;--ia-cct:#BC151B;--ia-fin:#D4B800;--ia-ncm:#4F4C4D}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ia-ncm:#B8B4B5;--ia-fin:#FFE45C}}
+:root[data-theme="dark"]{--ia-ncm:#B8B4B5;--ia-fin:#FFE45C}
+.page-head{flex-wrap:wrap}
+.ia-head-acoes{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ia-head-acoes .sel{width:auto;min-width:150px;height:36px}
+select.sel{color:var(--ink)}
+#painelIa{display:grid;grid-template-columns:minmax(0,1fr);gap:20px}
+#painelIa .kpi{cursor:default}
+#painelIa .dlg-acoes{flex-wrap:wrap}
+.iabar{position:relative;height:8px;border-radius:99px;background:var(--surface-2);overflow:visible;margin:10px 0 4px}
+.iabar.big{height:12px;margin-top:4px}
+.iabar i{display:block;height:100%;border-radius:inherit;background:var(--ciano);transition:width .5s cubic-bezier(.2,.7,.2,1)}
+.iabar.aviso i{background:#D4A800}.iabar.crit i{background:var(--vermelho)}
+.iabar em{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink-3);opacity:.55;border-radius:2px}
+.ia-nota{color:var(--ink-2);font-size:13px;line-height:1.5;margin-top:8px;max-width:72ch}
+.ia-apps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:14px}
+.ia-dica{margin-left:auto;color:var(--ink-3);font-size:13px;text-align:right}
+.ia-tb td{white-space:nowrap}
+.ia-app{border:1px solid var(--line);border-radius:var(--r-sm);padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.ia-app-top{display:flex;align-items:flex-start;gap:10px}
+.ia-app-top .dot{width:10px;height:10px;border-radius:50%;margin-top:6px;flex:none}
+.ia-app-nome{flex:1;min-width:0}.ia-app-nome b{display:block;font:700 14.5px/1.3 var(--font-title)}
+.ia-app-nome small{color:var(--ink-3);font-size:12px}
+.ia-app-num{display:flex;align-items:baseline;gap:8px;margin-top:6px}
+.ia-app-num b{font:800 20px/1.2 var(--font-title);white-space:nowrap}.ia-app-num span{color:var(--ink-2);font-size:13px}
+.ia-dl{display:grid;gap:3px;margin:4px 0 8px}
+.ia-dl div{display:flex;justify-content:space-between;gap:10px;font-size:13px}
+.ia-dl dt{color:var(--ink-2)}.ia-dl dd{margin:0;text-align:right}
+.warn-t{color:var(--brand-ink);font-weight:600}
+.legend{flex-wrap:wrap;margin-left:auto}
+.ia-aviso{align-items:flex-start}.ia-aviso small{display:block;color:var(--ink-2);font-size:12.5px;line-height:1.45}
+.ia-aviso time{font-size:12px;color:var(--ink-3);white-space:nowrap}
+.ia-aviso.lido{opacity:.62}
+.row-li time{font-size:12px;color:var(--ink-3)}
+.ia-seg{padding:0;margin:4px 0 6px;max-width:320px}
+.ia-auto{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+.ia-auto .f{justify-content:flex-end}
+.ia-sub{font:700 14px/1.3 var(--font-title);margin:18px 0 8px}
+.ia-check{display:flex;align-items:center;gap:10px;font-size:14px;margin:4px 0 12px}
+.ia-check input{width:18px;height:18px;accent-color:var(--brand)}
+.ia-form .f input{height:42px}
+.nt-ia .chip{margin-top:2px}
+@media (max-width:700px){.ia-auto{grid-template-columns:1fr}.ia-dica{display:none}.ia-head-acoes{width:100%}.ia-head-acoes .sel{flex:1 1 100%}.ia-head-acoes .btn{flex:1}.panel-head{flex-wrap:wrap}.panel-head span.link{white-space:normal;margin-left:0}.kpi b{font-size:20px}}
+.nav-item .ia-n{opacity:1;background:var(--vermelho);color:#fff;border-radius:99px;padding:0 7px;font-weight:700;font-size:11.5px;line-height:18px}
 </style>
 </head>
 <body>
@@ -523,13 +569,23 @@ var CFG = {
      de administrador no núcleo antes de criar ou desativar a conta. */
   /* v1.2.0: gestão de pessoas (criar, senha, excluir, reativar) — função do próprio projeto */
   usuarios: "https://fbxelwhdiisfmnwrerbl.supabase.co/functions/v1/portal-usuarios",
+  /* v1.3.0: IA Central — relatório sob demanda (o consumo vem das funções core.ia_*) */
+  iaGateway: "https://fbxelwhdiisfmnwrerbl.supabase.co/functions/v1/ia-gateway",
   provisionar: {
     cobranca: "https://yeujqjtjqtegsnzwwazb.supabase.co/functions/v1/portal-provisionar"
   }
 };
 
-var VERSAO = "v1.2.0";
+var VERSAO = "v1.3.0";
 var VERSOES = [
+  ["v1.3.0", "27/09/2026",
+   "Nova tela Consumo de IA (administradores): gasto do mês e do dia de todos os aplicativos com IA, " +
+   "saldo estimado na Anthropic, uso de cada aplicativo contra o limite mensal e o do dia, gráfico do " +
+   "gasto por dia, últimas chamadas e avisos. Dá para ajustar os limites de cada aplicativo, gerar ou " +
+   "trocar o token, lançar recarga ou corrigir o saldo, escolher o modo de recarga (manual ou " +
+   "automática), mudar o limite total e os e-mails de aviso e enviar o relatório do mês na hora. " +
+   "Avisos de IA não lidos aparecem nas Notificações do Início e no menu. No celular, os títulos dos " +
+   "blocos não passam mais da largura da tela."],
   ["v1.2.0", "24/09/2026",
    "Tela de Acessos refeita para a gestão completa das pessoas: botão Nova pessoa (senha provisória " +
    "definida aqui ou convite por e-mail), botão Aplicativos com liberação de cada aplicativo e o nível " +
@@ -698,6 +754,7 @@ I.help  = '<circle cx="12" cy="12" r="8.500"/><path d="M9.500 9.500a2.500 2.500 
 I.clock = '<circle cx="12" cy="12" r="8.500"/><path d="M12 7.500V12l3 2"/>';
 I.target = '<circle cx="12" cy="13" r="8"/><circle cx="12" cy="13" r="4.500"/><circle cx="12" cy="13" r="1"/><path d="M12 13l7-7M16 5.500l3 .500.500 3"/>';
 I.cloud = '<path d="M7 18a4 4 0 0 1-.500-7.970A6 6 0 0 1 18 9.500a4.250 4.250 0 0 1 0 8.500z"/>';
+I.spark = '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM18.5 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/>';
 I.headset = '<path d="M5 14v-2a7 7 0 0 1 14 0v2M5 14a2 2 0 0 1 2-2h1v6H7a2 2 0 0 1-2-2zM19 14a2 2 0 0 0-2-2h-1v6h1a2 2 0 0 0 2-2zM19 16v1a3 3 0 0 1-3 3h-3"/>';
 
 var ICONE_AREA = { dp: "users", tributario: "chart", contabil_financeiro: "wallet", gestao: "brief", adm: "tool" };
@@ -818,6 +875,7 @@ function carregarContexto() {
     var emp = ler("empresa", null);
     st.empresaAtiva = st.empresas.filter(function (e) { return e.id === emp; })[0] || null;
     desenhar();
+    carregarIaResumo();
     var md = st.sessao.user && st.sessao.user.user_metadata;
     if (st.precisaSenha || (md && md.trocar_senha)) trocarSenha(true);
   }).catch(function (e) {
@@ -856,10 +914,12 @@ function casca() {
 
   var itens = [["inicio", "Início", "home"], ["apps", "Aplicativos", "grid"]];
   if (souAdmin()) itens.push(["acessos", "Acessos", "key"], ["auditoria", "Auditoria", "audit"]);
+  if (souAdmin() && st.iaAdmin !== false) itens.push(["ia", "Consumo de IA", "spark"]);
 
   var h = itens.map(function (i) {
     return '<button class="nav-item" data-ir="' + i[0] + '" title="' + i[1] + '"' +
-      (st.tela === i[0] ? ' aria-current="page"' : "") + ">" + ic(i[2]) + "<span>" + i[1] + "</span></button>";
+      (st.tela === i[0] ? ' aria-current="page"' : "") + ">" + ic(i[2]) + "<span>" + i[1] + "</span>" +
+      (i[0] === "ia" && st.iaNaoLidas ? '<i class="n ia-n" aria-label="avisos não lidos">' + st.iaNaoLidas + "</i>" : "") + "</button>";
   }).join("");
 
   var areas = agrupar();
@@ -1086,8 +1146,12 @@ function lateral(avisos, recentes) {
   /* notificações: por enquanto, os avisos de serviço do catálogo */
   h += '<section class="panel"><div class="panel-head"><h2>' + ic("bell") + "Notificações</h2>" +
     (souAdmin() ? '<button class="link" data-ir="auditoria">Ver auditoria</button>' : "") + "</div>" +
-    (avisos.length
-      ? avisos.map(function (a) {
+    (avisos.length || (st.iaAvisos && st.iaAvisos.length)
+      ? (st.iaAvisos || []).slice(0, 3).map(function (n) {
+          return '<button class="row-li nt-row nt-ia" data-ir="ia">' +
+            '<span class="chip ' + (n.nivel === "critico" ? "imp" : n.nivel === "aviso" ? "warn" : "info") + '">IA</span>' +
+            "<div><b>" + esc(n.titulo) + "</b><small>" + esc(n.texto) + "</small></div></button>";
+        }).join("") + avisos.map(function (a) {
           return '<button class="row-li nt-row" data-abrir="' + esc(a.app_id) + '">' +
             '<span class="tile sm ' + esc(a.area_id) + '">' + ic(iconeDe(a)) + "</span>" +
             "<div><b>" + esc(a.nome) + " está " + esc((ROTULO_SITUACAO[a.situacao] || "").toLowerCase()) + "</b>" +
@@ -1167,6 +1231,479 @@ T.versoes = function () {
       return "<li><b>" + v[0] + '</b><span style="color:var(--ink-2)">' + v[1] + "</span><span>" + v[2] + "</span></li>";
     }).join("") + "</ul></section>";
 };
+
+/* ---------- Consumo de IA (administrador da IA Central) — v1.3.0 ---------- */
+var IA_CORES = { atp: "var(--ia-atp)", cct: "var(--ia-cct)", financeiro: "var(--ia-fin)", ncm: "var(--ia-ncm)" };
+var IA_EXTRA = ["#7A5AF8", "#2E9E6B", "#E07B00", "#9A6B4F"];
+function iaCor(app, i) { return IA_CORES[app] || IA_EXTRA[i % IA_EXTRA.length]; }
+
+function usd(v) {
+  var n = Number(v || 0);
+  if (n > 0 && n < 0.01) return usdFino(n);
+  return "US$ " + n.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function usdFino(v) {
+  var n = Number(v || 0);
+  var casas = n === 0 ? 2 : n < 0.01 ? 5 : n < 1 ? 4 : 2;
+  return "US$ " + n.toLocaleString("pt-BR", { minimumFractionDigits: casas, maximumFractionDigits: casas });
+}
+function num(v) { return Number(v || 0).toLocaleString("pt-BR"); }
+function dataHora(iso) {
+  if (!iso) return "—";
+  var d = new Date(iso);
+  return d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) + " " +
+    d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+}
+function mesAtualSP() {
+  var p = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit" })
+    .formatToParts(new Date());
+  var a = +p.filter(function (x) { return x.type === "year"; })[0].value;
+  var m = +p.filter(function (x) { return x.type === "month"; })[0].value;
+  return { a: a, m: m };
+}
+function mesesRecentes(n) {
+  var r = [], atual = mesAtualSP(), a = atual.a, m = atual.m;
+  var nomes = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+  for (var i = 0; i < n; i++) {
+    r.push({ id: a + "-" + String(m).padStart(2, "0"), nome: nomes[m - 1] + "/" + a });
+    m--; if (!m) { m = 12; a--; }
+  }
+  return r;
+}
+function nomeMes(id) {
+  var achado = mesesRecentes(12).filter(function (x) { return x.id === id; })[0];
+  return achado ? achado.nome : id;
+}
+
+/* resumo leve para o menu e as notificações do Início */
+function carregarIaResumo() {
+  if (!souAdmin()) return;
+  sb.schema("core").rpc("ia_painel", {}).then(function (r) {
+    if (r.error) { st.iaAdmin = false; return; }
+    st.iaAdmin = true;
+    if (!st.iaMes || st.iaMes === r.data.mes) st.ia = r.data;
+    st.iaNaoLidas = r.data.nao_lidas || 0;
+    st.iaAvisos = (r.data.notificacoes || []).filter(function (n) { return !n.lida_em; });
+    if (st.tela === "inicio" || st.tela === "ia") desenhar(); else casca();
+  });
+}
+
+T.ia = function () {
+  if (!souAdmin()) return semPermissao();
+  var meses = mesesRecentes(6);
+  st.iaMes = st.iaMes || meses[0].id;
+  carregarIa();
+  return '<div class="page-head"><div><h1>Consumo de IA</h1>' +
+    "<p>Todos os aplicativos usam uma única conta da Anthropic, pela IA Central. Aqui ficam o gasto de cada um, os limites, os avisos e o saldo.</p></div>" +
+    '<div class="ia-head-acoes">' +
+    '<select class="sel" id="iaMes" aria-label="Mês">' +
+    meses.map(function (m) { return '<option value="' + m.id + '"' + (m.id === st.iaMes ? " selected" : "") + ">" + m.nome + "</option>"; }).join("") +
+    "</select>" +
+    '<button class="btn sm" data-iarel="1">Enviar relatório</button>' +
+    '<button class="btn sm primary" data-iasaldo="recarga">Lançar recarga</button></div></div>' +
+    '<div id="painelIa"><section class="panel"><div class="carregando"><div class="spin"></div>Carregando o consumo…</div></section></div>';
+};
+
+function carregarIa() {
+  sb.schema("core").rpc("ia_painel", { p_mes: st.iaMes + "-01" }).then(function (r) {
+    if (r.error) throw r.error;
+    st.ia = r.data;
+    st.iaAdmin = true;
+    st.iaNaoLidas = r.data.nao_lidas || 0;
+    st.iaAvisos = (r.data.notificacoes || []).filter(function (n) { return !n.lida_em; });
+    var el = $("#painelIa");
+    if (el) el.innerHTML = painelIa(r.data);
+    casca();
+  }).catch(function (e) {
+    var el = $("#painelIa"); if (!el) return;
+    var m = explicar(e);
+    if (/administradores da IA Central/i.test(m))
+      m = "Seu e-mail não está na lista de administradores da IA Central. A lista fica em core.ia_config (coluna admins).";
+    if (/ia_painel|function .* does not exist|Could not find the function/i.test((e && e.message) || ""))
+      m = "A IA Central ainda não está instalada neste projeto, ou falta rodar o ia_central_v1.0.1.sql.";
+    el.innerHTML = '<section class="panel"><div class="vazio"><b>Não deu para carregar o consumo</b>' + esc(m) + "</div></section>";
+  });
+}
+
+function nivelUso(gasto, limite, alerta) {
+  if (!limite || limite <= 0) return "";
+  var p = gasto / limite * 100;
+  return p >= 100 ? "crit" : p >= alerta ? "aviso" : "";
+}
+
+function painelIa(d) {
+  var c = d.config || {}, s = d.saldo || {}, apps = d.apps || [], rec = d.recarga || { modo: "manual" };
+  var alerta = +c.alerta_pct || 80, limTot = +c.limite_total_mensal_usd || 0;
+  var pctTot = limTot ? Math.min(100, (+d.total_mes || 0) / limTot * 100) : 0;
+  var nvTot = nivelUso(+d.total_mes || 0, limTot, alerta);
+  var abaixo = s.estimado !== null && s.estimado !== undefined && +s.estimado < +c.saldo_minimo_usd;
+  var ehMesAtual = d.mes === mesesRecentes(1)[0].id;
+
+  /* ---- números do mês ---- */
+  var h = '<section class="panel"><div class="panel-head"><h2>' + ic("chart") + "Resumo de " + esc(nomeMes(d.mes)) + "</h2>" +
+    '<span class="ia-dica">Valores calculados pelos tokens de cada chamada</span></div>' +
+    '<div class="kpis">' +
+    '<div class="kpi"><span>Gasto no mês</span><b>' + usd(d.total_mes) + "</b>" +
+      '<small class="' + (nvTot ? "warn" : "mute") + '">de ' + usd(limTot) + " (limite total)</small></div>" +
+    '<div class="kpi"><span>Gasto hoje</span><b>' + usd(d.total_hoje) + '</b><small class="mute">todos os aplicativos</small></div>' +
+    '<div class="kpi"><span>Saldo estimado na Anthropic</span><b>' +
+      (s.estimado === null || s.estimado === undefined ? "—" : usd(s.estimado)) + "</b>" +
+      '<small class="' + (abaixo ? "warn" : "mute") + '">' +
+      (s.informado_em ? (abaixo ? "abaixo do mínimo de " + usd(c.saldo_minimo_usd) : "informado em " + dataHora(s.informado_em).split(" ")[0])
+                      : "lance o saldo do Console") + "</small></div>" +
+    '<div class="kpi"><span>Mês anterior</span><b>' + usd(d.total_mes_anterior) + '</b><small class="mute">para comparar</small></div>' +
+    "</div>" +
+    '<div class="iabar big' + (nvTot ? " " + nvTot : "") + '" role="img" aria-label="' + Math.round(pctTot) + '% do limite total do mês">' +
+    '<i style="width:' + pctTot.toFixed(1) + '%"></i><em style="left:' + alerta + '%" title="aviso em ' + alerta + '%"></em></div>' +
+    '<p class="ia-nota">' + Math.round(pctTot) + "% do limite total do mês. Aviso ao chegar em " + alerta +
+    "%; em 100% todos os aplicativos param até o mês virar ou o limite ser aumentado.</p></section>";
+
+  /* ---- por aplicativo ---- */
+  h += '<section class="panel"><div class="panel-head"><h2>' + ic("grid") + "Por aplicativo</h2>" +
+    '<span class="ia-dica">Limite mensal, limite do dia e token de cada um</span></div>' +
+    '<div class="ia-apps">' +
+    apps.map(function (a, i) {
+      var gm = +a.gasto_mes || 0, lm = +a.limite_mensal_usd || 0, gh = +a.gasto_hoje || 0;
+      var pm = lm ? Math.min(100, gm / lm * 100) : 0, nv = nivelUso(gm, lm, alerta);
+      var ld = a.limite_diario_usd === null || a.limite_diario_usd === undefined ? null : +a.limite_diario_usd;
+      var recusadas = (+a.bloqueios_mes || 0) + (+a.erros_mes || 0);
+      return '<article class="ia-app">' +
+        '<div class="ia-app-top"><i class="dot" style="background:' + iaCor(a.app, i) + '"></i>' +
+        '<div class="ia-app-nome"><b>' + esc(a.nome) + "</b><small>" + esc((a.modelos || []).join(", ")) + "</small></div>" +
+        (a.ativo ? '<span class="tag ok">ligado</span>' : '<span class="tag no">desligado</span>') + "</div>" +
+        '<div class="ia-app-num"><b>' + usd(gm) + "</b><span>de " + usd(lm) + " no mês</span></div>" +
+        '<div class="iabar' + (nv ? " " + nv : "") + '"><i style="width:' + pm.toFixed(1) + '%"></i><em style="left:' + alerta + '%"></em></div>' +
+        '<dl class="ia-dl">' +
+        "<div><dt>Hoje</dt><dd>" + usd(gh) + (ld === null ? " · sem limite diário" : " de " + usd(ld)) + "</dd></div>" +
+        "<div><dt>Chamadas no mês</dt><dd>" + num(a.chamadas_mes) + (recusadas ? ' · <span class="warn-t">' + num(recusadas) + (recusadas === 1 ? " recusada" : " recusadas") + "</span>" : "") + "</dd></div>" +
+        "<div><dt>Último uso</dt><dd>" + (a.ultimo_uso ? esc(quandoTexto(a.ultimo_uso)) : "nunca") + "</dd></div>" +
+        "<div><dt>Token</dt><dd>" + (a.tem_token ? "gerado em " + esc(dataHora(a.token_criado_em).split(" ")[0]) : '<span class="warn-t">não gerado</span>') + "</dd></div>" +
+        "</dl>" +
+        '<div class="acoes" style="justify-content:flex-start">' +
+        '<button class="mini" data-ialim="' + esc(a.app) + '">Limites</button>' +
+        '<button class="mini" data-iatoken="' + esc(a.app) + '">' + (a.tem_token ? "Trocar token" : "Gerar token") + "</button></div>" +
+        "</article>";
+    }).join("") + "</div></section>";
+
+  /* ---- gráfico diário ---- */
+  h += '<section class="panel"><div class="panel-head"><h2>' + ic("cal") + "Gasto por dia</h2>" +
+    '<div class="legend">' + apps.map(function (a, i) {
+      return '<span><i style="background:' + iaCor(a.app, i) + '"></i>' + esc(a.nome.split(" — ")[0]) + "</span>";
+    }).join("") + "</div></div>" + graficoDiario(d, apps) + "</section>";
+
+  /* ---- avisos + últimas chamadas ---- */
+  var notifs = d.notificacoes || [];
+  h += '<section class="panel"><div class="panel-head"><h2>' + ic("bell") + "Avisos</h2>" +
+    (d.nao_lidas ? '<button class="link" data-ialidas="1">Marcar como lidos</button>' : "") + "</div>" +
+    (notifs.length ? notifs.map(function (n) {
+      return '<div class="row-li ia-aviso' + (n.lida_em ? " lido" : "") + '">' +
+        '<span class="chip ' + (n.nivel === "critico" ? "imp" : n.nivel === "aviso" ? "warn" : "info") + '">' +
+        ({ critico: "Crítico", aviso: "Aviso", info: "Info" }[n.nivel] || n.nivel) + "</span>" +
+        "<div><b>" + esc(n.titulo) + "</b><small>" + esc(n.texto) + "</small></div>" +
+        "<time>" + esc(dataHora(n.em)) + "</time></div>";
+    }).join("") : '<div class="vazio"><b>Nenhum aviso</b>Quando um aplicativo chegar perto do limite, ou o saldo baixar, o aviso aparece aqui e vai por e-mail.</div>') +
+    "</section>" +
+    '<section class="panel"><div class="panel-head"><h2>' + ic("clock") + "Últimas chamadas</h2></div>" + tabelaUltimas(d.ultimas || [], apps) + "</section>";
+
+  /* ---- recarga + alertas ---- */
+  h += '<div class="pair">' + blocoRecarga(d, rec, c) + blocoAlertas(c) + "</div>";
+  if (!ehMesAtual) h = '<p class="ia-nota" style="margin:0 0 12px">Mostrando ' + esc(nomeMes(d.mes)) +
+    '. Saldo, avisos e últimas chamadas são sempre os de agora.</p>' + h;
+  return h;
+}
+
+function graficoDiario(d, apps) {
+  var partes = d.mes.split("-"), ano = +partes[0], mes = +partes[1];
+  var dias = new Date(ano, mes, 0).getDate();
+  var porDia = {}, max = 0;
+  (d.diario || []).forEach(function (x) {
+    var dia = +String(x.dia).slice(8, 10);
+    porDia[dia] = porDia[dia] || {};
+    porDia[dia][x.app] = (porDia[dia][x.app] || 0) + (+x.custo || 0);
+  });
+  Object.keys(porDia).forEach(function (k) {
+    var t = 0; Object.keys(porDia[k]).forEach(function (a) { t += porDia[k][a]; });
+    if (t > max) max = t;
+  });
+  if (!max) return '<div class="vazio"><b>Nenhum gasto neste mês</b>As barras aparecem conforme os aplicativos usam a IA.</div>';
+
+  /* escala "redonda" em dólares */
+  var passos = [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100];
+  var topo = passos.filter(function (p) { return p * 4 >= max; })[0] || Math.ceil(max);
+  topo = topo * 4;
+  var W = 760, H = 230, L = 58, R = 10, T0 = 12, B = 26, pw = W - L - R, ph = H - T0 - B;
+  var bw = pw / dias;
+  var svg = '<svg class="chart" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Gasto com IA por dia do mês">';
+  for (var g = 0; g <= 4; g++) {
+    var y = T0 + ph - ph * g / 4, val = topo * g / 4;
+    svg += '<line class="g" x1="' + L + '" x2="' + (W - R) + '" y1="' + y + '" y2="' + y + '"/>' +
+      '<text x="' + (L - 8) + '" y="' + (y + 4) + '" text-anchor="end">' + (g ? eixo(val, topo) : "0") + "</text>";
+  }
+  for (var dia = 1; dia <= dias; dia++) {
+    var x = L + (dia - 1) * bw, base = T0 + ph, info = porDia[dia] || {}, tit = [];
+    apps.forEach(function (a, i) {
+      var v = info[a.app] || 0; if (!v) return;
+      var hgt = Math.max(1.5, v / topo * ph);
+      base -= hgt;
+      svg += '<rect x="' + (x + bw * 0.18).toFixed(1) + '" y="' + base.toFixed(1) + '" width="' + (bw * 0.64).toFixed(1) +
+        '" height="' + hgt.toFixed(1) + '" rx="2" fill="' + iaCor(a.app, i) + '"/>';
+      tit.push(a.nome.split(" — ")[0] + ": " + usdFino(v));
+    });
+    if (tit.length) svg += '<rect x="' + x.toFixed(1) + '" y="' + T0 + '" width="' + bw.toFixed(1) + '" height="' + ph + '" fill="transparent"><title>Dia ' + dia + "\n" + tit.join("\n") + "</title></rect>";
+    if (dia === 1 || dia % 5 === 0) svg += '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (H - 8) + '" text-anchor="middle">' + dia + "</text>";
+  }
+  return '<div style="overflow-x:auto">' + svg + "</svg></div>";
+}
+
+function eixo(v, topo) {
+  var casas = topo >= 10 ? 0 : topo >= 0.4 ? 2 : topo >= 0.04 ? 3 : 4;
+  return "$" + v.toLocaleString("pt-BR", { minimumFractionDigits: casas, maximumFractionDigits: casas });
+}
+
+function tabelaUltimas(lista, apps) {
+  if (!lista.length) return '<div class="vazio"><b>Nenhuma chamada ainda</b>Cada uso de IA de qualquer aplicativo aparece aqui.</div>';
+  var nomes = {}; apps.forEach(function (a) { nomes[a.app] = a.nome.split(" — ")[0]; });
+  var rot = { ok: ["ok", "ok"], bloqueado: ["recusada", "adm"], erro: ["erro", "no"], sem_credito: ["sem crédito", "no"] };
+  return '<div style="overflow-x:auto"><table class="tb ia-tb"><thead><tr>' +
+    "<th>Quando</th><th>Aplicativo</th><th>Quem</th><th>Tokens</th><th>Custo</th><th>Resultado</th></tr></thead><tbody>" +
+    lista.slice(0, 12).map(function (u) {
+      var r = rot[u.status] || [u.status, ""];
+      return "<tr><td>" + esc(dataHora(u.em)) + "</td><td>" + esc(nomes[u.app] || u.app) + "</td>" +
+        '<td style="color:var(--ink-2)">' + esc(u.usuario || "—") + "</td>" +
+        "<td>" + num(u.entrada) + " / " + num(u.saida) + "</td><td>" + usdFino(u.custo_usd) + "</td>" +
+        '<td><span class="tag ' + r[1] + '"' + (u.detalhe ? ' title="' + esc(u.detalhe) + '"' : "") + ">" + esc(r[0]) + "</span></td></tr>";
+    }).join("") + "</tbody></table></div>";
+}
+
+function blocoRecarga(d, rec, c) {
+  var auto = rec.modo === "automatica";
+  var saldos = d.saldos || [];
+  return '<section class="panel" id="blocoRecarga"><div class="panel-head"><h2>' + ic("wallet") + "Recarga de créditos</h2>" +
+    '<a class="link" href="https://platform.claude.com/settings/billing" target="_blank" rel="noopener">Abrir o Console</a></div>' +
+    '<div class="seg ia-seg" role="radiogroup" aria-label="Modo de recarga">' +
+    '<button data-iamodo="manual" aria-pressed="' + !auto + '">Manual</button>' +
+    '<button data-iamodo="automatica" aria-pressed="' + auto + '">Automática</button></div>' +
+    '<div id="iaModoTexto">' + textoModo(auto ? "automatica" : "manual", c) + "</div>" +
+    '<div class="ia-auto" id="iaAuto"' + (auto ? "" : " hidden") + ">" +
+    '<div class="f"><label for="iaAutoValor">Valor de cada recarga (US$)</label><input id="iaAutoValor" type="number" min="1" step="1" value="' + esc(rec.valor || 20) + '"></div>' +
+    '<div class="f"><label for="iaAutoGatilho">Recarregar quando o saldo cair abaixo de (US$)</label><input id="iaAutoGatilho" type="number" min="0" step="1" value="' + esc(rec.gatilho === null || rec.gatilho === undefined ? 5 : rec.gatilho) + '"></div></div>' +
+    '<div class="dlg-acoes" style="justify-content:flex-start;margin-top:4px">' +
+    '<button class="btn sm primary" data-iasalvarmodo="1">Salvar modo de recarga</button>' +
+    '<button class="btn sm" data-iasaldo="saldo_informado">Corrigir o saldo</button></div>' +
+    '<h3 class="ia-sub">Lançamentos de saldo</h3>' +
+    (saldos.length ? '<div style="overflow-x:auto"><table class="tb"><thead><tr><th>Quando</th><th>Tipo</th><th>Valor</th><th>Observação</th></tr></thead><tbody>' +
+      saldos.map(function (x) {
+        return "<tr><td>" + esc(dataHora(x.em)) + "</td><td>" + (x.tipo === "recarga" ? "Recarga" : "Saldo do Console") + "</td>" +
+          "<td>" + usd(x.valor_usd) + '</td><td style="white-space:normal;color:var(--ink-2)">' + esc(x.obs || "") + "</td></tr>";
+      }).join("") + "</tbody></table></div>"
+      : '<div class="vazio"><b>Nenhum lançamento</b>Lance o saldo que o Console mostra para o portal estimar quanto resta.</div>') +
+    "</section>";
+}
+
+function textoModo(modo, c) {
+  if (modo === "automatica")
+    return '<p class="ia-nota">O Console da Anthropic recarrega sozinho. Ative lá também, com os mesmos valores, em Billing, opção de recarga automática. ' +
+      "A cada recibo que chegar por e-mail, lance a recarga aqui para o saldo estimado continuar certo.</p>";
+  return '<p class="ia-nota">Você compra os créditos no Console quando precisar (Billing, Adicionar fundos) e lança a recarga aqui. ' +
+    "Quando o saldo estimado ficar abaixo de " + usd(c.saldo_minimo_usd) + ", chega um aviso no portal e por e-mail.</p>";
+}
+
+function blocoAlertas(c) {
+  return '<section class="panel"><div class="panel-head"><h2>' + ic("shield") + "Limites gerais e avisos</h2></div>" +
+    '<div class="ia-form">' +
+    '<div class="f"><label for="iaLimTot">Limite total do mês, todos os aplicativos (US$)</label><input id="iaLimTot" type="number" min="1" step="1" value="' + esc(c.limite_total_mensal_usd) + '"></div>' +
+    '<div class="f"><label for="iaPct">Avisar ao atingir (% do limite)</label><input id="iaPct" type="number" min="50" max="99" step="1" value="' + esc(c.alerta_pct) + '"></div>' +
+    '<div class="f"><label for="iaSaldoMin">Avisar quando o saldo cair abaixo de (US$)</label><input id="iaSaldoMin" type="number" min="0" step="1" value="' + esc(c.saldo_minimo_usd) + '"></div>' +
+    '<div class="f"><label for="iaEmails">E-mails que recebem avisos e relatório</label><input id="iaEmails" type="text" value="' + esc((c.email_alertas || []).join(", ")) + '"></div>' +
+    '<label class="ia-check"><input type="checkbox" id="iaRelatorio"' + (c.relatorio_mensal ? " checked" : "") + "> Enviar o relatório do mês no dia 1, às 8h</label>" +
+    "</div>" +
+    '<div class="dlg-acoes" style="justify-content:flex-start"><button class="btn sm primary" data-iasalvarcfg="1">Salvar limites e avisos</button></div>' +
+    "</section>";
+}
+
+/* ---- ações ---- */
+function iaApp(app) { return ((st.ia && st.ia.apps) || []).filter(function (a) { return a.app === app; })[0]; }
+function iaRpc(nome, args, btn, rotulo) {
+  if (btn) { btn.disabled = true; btn.dataset.rot = btn.textContent; btn.textContent = rotulo || "Salvando…"; }
+  return sb.schema("core").rpc(nome, args).then(function (r) {
+    if (btn) { btn.disabled = false; btn.textContent = btn.dataset.rot; }
+    if (r.error) { toast(explicar(r.error)); return null; }
+    return r;
+  });
+}
+function numCampo(id) { var v = ($("#" + id) || {}).value; return v === "" || v === undefined ? null : Number(String(v).replace(",", ".")); }
+
+function dialogoIaLimites(app) {
+  var a = iaApp(app); if (!a) return;
+  abrirDialogo(
+    "<h2>Limites de " + esc(a.nome) + "</h2>" +
+    "<p>Passou do limite, a chamada é recusada com uma mensagem clara no aplicativo. Modelos liberados: " + esc((a.modelos || []).join(", ")) + ".</p>" +
+    '<div class="f"><label for="lMes">Limite mensal (US$)</label><input id="lMes" type="number" min="0" step="0.5" value="' + esc(a.limite_mensal_usd) + '"></div>' +
+    '<div class="f"><label for="lDia">Limite por dia (US$) — vazio para não limitar o dia</label><input id="lDia" type="number" min="0" step="0.5" value="' + esc(a.limite_diario_usd === null ? "" : a.limite_diario_usd) + '"></div>' +
+    '<div class="f"><label for="lTok">Tamanho máximo da resposta (tokens)</label><input id="lTok" type="number" min="64" max="32000" step="1" value="' + esc(a.max_tokens) + '"></div>' +
+    '<label class="ia-check"><input type="checkbox" id="lAtivo"' + (a.ativo ? " checked" : "") + "> Uso de IA ligado neste aplicativo</label>" +
+    '<div class="dlg-acoes"><button class="btn" data-fechar>Cancelar</button><button class="btn primary" id="lOk">Salvar limites</button></div>',
+    function () {
+      $("#lOk").addEventListener("click", function () {
+        var mes = numCampo("lMes"), dia = numCampo("lDia"), tok = numCampo("lTok");
+        if (mes === null || mes < 0) { toast("Informe o limite mensal."); return; }
+        if (dia !== null && dia < 0) { toast("O limite do dia não pode ser negativo."); return; }
+        if (tok === null || tok < 64 || tok > 32000) { toast("O tamanho da resposta vai de 64 a 32.000 tokens."); return; }
+        iaRpc("ia_salvar_app", { p_app: app, p_limite_mensal: mes, p_limite_diario: dia, p_ativo: $("#lAtivo").checked, p_max_tokens: Math.round(tok) }, this)
+          .then(function (r) { if (!r) return; $("#dlg").close(); toast("Limites salvos"); carregarIa(); });
+      });
+    });
+}
+
+function dialogoIaToken(app) {
+  var a = iaApp(app); if (!a) return;
+  abrirDialogo(
+    "<h2>" + (a.tem_token ? "Trocar o token" : "Gerar o token") + " de " + esc(a.nome) + "</h2>" +
+    (a.tem_token
+      ? "<p><b>O token atual deixa de funcionar na hora.</b> O aplicativo fica sem IA até receber o token novo no secret dele. Faça a troca quando for atualizar o aplicativo.</p>"
+      : "<p>O token é a senha do aplicativo na IA Central. Ele aparece uma única vez: copie e guarde no gerenciador de senhas antes de fechar.</p>") +
+    '<div id="tkArea"></div>' +
+    '<div class="dlg-acoes" id="tkAcoes"><button class="btn" data-fechar>Cancelar</button><button class="btn primary" id="tkOk">' +
+    (a.tem_token ? "Trocar token" : "Gerar token") + "</button></div>",
+    function () {
+      $("#tkOk").addEventListener("click", function () {
+        iaRpc("ia_gerar_token", { p_app: app }, this, "Gerando…").then(function (r) {
+          if (!r) return;
+          $("#dlg").dataset.obrigatorio = "1";
+          $("#tkArea").innerHTML =
+            '<div class="f"><label for="tkVal">Token de ' + esc(a.nome) + '</label><input id="tkVal" type="text" readonly value="' + esc(r.data) + '"></div>' +
+            '<p class="ia-nota">Copie agora. Depois de fechar, só gerando outro.</p>';
+          $("#tkAcoes").innerHTML = '<button class="btn" id="tkCopiar">Copiar</button><button class="btn primary" id="tkFim">Já guardei</button>';
+          $("#tkVal").select();
+          $("#tkCopiar").addEventListener("click", function () {
+            var v = $("#tkVal").value;
+            (navigator.clipboard ? navigator.clipboard.writeText(v) : Promise.reject()).then(function () { toast("Token copiado"); })
+              .catch(function () { $("#tkVal").select(); document.execCommand("copy"); toast("Token copiado"); });
+          });
+          $("#tkFim").addEventListener("click", function () {
+            $("#dlg").dataset.obrigatorio = ""; $("#dlg").close(); carregarIa();
+          });
+        });
+      });
+    });
+}
+
+function dialogoIaSaldo(tipo) {
+  var recarga = tipo === "recarga";
+  abrirDialogo(
+    "<h2>" + (recarga ? "Lançar recarga" : "Corrigir o saldo") + "</h2>" +
+    (recarga
+      ? "<p>Informe o valor que você comprou no Console. Ele soma ao saldo estimado.</p>"
+      : "<p>Informe o saldo exato que o Console mostra agora (Créditos da organização). Ele passa a ser o novo ponto de partida da estimativa.</p>") +
+    '<div class="f"><label for="sVal">' + (recarga ? "Valor da recarga (US$)" : "Saldo atual no Console (US$)") + '</label><input id="sVal" type="number" min="0" step="0.01"></div>' +
+    '<div class="f"><label for="sObs">Observação (opcional)</label><input id="sObs" type="text" placeholder="' + (recarga ? "recibo de " + hojeCurto() : "conferido no Console em " + hojeCurto()) + '"></div>' +
+    '<div class="dlg-acoes"><button class="btn" data-fechar>Cancelar</button><button class="btn primary" id="sOkIa">' + (recarga ? "Lançar recarga" : "Corrigir o saldo") + "</button></div>",
+    function () {
+      $("#sVal").focus();
+      $("#sOkIa").addEventListener("click", function () {
+        var v = numCampo("sVal");
+        if (v === null || v < 0 || (recarga && v === 0)) { toast("Informe um valor válido."); return; }
+        var obs = $("#sObs").value.trim() || $("#sObs").placeholder;
+        iaRpc("ia_lancar_saldo", { p_tipo: tipo, p_valor: v, p_obs: obs }, this).then(function (r) {
+          if (!r) return;
+          $("#dlg").close();
+          toast((recarga ? "Recarga lançada" : "Saldo corrigido") + ". Saldo estimado: " + usd(r.data.saldo_estimado));
+          carregarIa();
+        });
+      });
+    });
+}
+function hojeCurto() { return new Date().toLocaleDateString("pt-BR"); }
+
+function dialogoIaRelatorio() {
+  var meses = mesesRecentes(6);
+  abrirDialogo(
+    "<h2>Enviar relatório</h2><p>O relatório do mês vai por e-mail para " +
+    esc(((st.ia && st.ia.config && st.ia.config.email_alertas) || []).join(", ") || "os e-mails de aviso") +
+    ". O envio automático do dia 1 continua valendo.</p>" +
+    '<div class="f"><label for="rMes">Mês</label><select class="sel" id="rMes">' +
+    meses.map(function (m, i) { return '<option value="' + m.id + '"' + (i === 1 ? " selected" : "") + ">" + m.nome + "</option>"; }).join("") +
+    "</select></div>" +
+    '<div class="dlg-acoes"><button class="btn" data-fechar>Cancelar</button><button class="btn primary" id="rOk">Enviar relatório</button></div>',
+    function () {
+      $("#rOk").addEventListener("click", function () {
+        var btn = this, mes = $("#rMes").value;
+        btn.disabled = true; btn.textContent = "Enviando…";
+        sb.auth.getSession().then(function (s) {
+          var tok = s.data && s.data.session && s.data.session.access_token;
+          return fetch(CFG.iaGateway + "?acao=relatorio&mes=" + encodeURIComponent(mes), {
+            method: "POST",
+            headers: { "content-type": "application/json", authorization: "Bearer " + tok },
+            body: "{}"
+          });
+        }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+          .then(function (x) {
+            btn.disabled = false; btn.textContent = "Enviar relatório";
+            if (!x.ok || !x.j.ok) { toast("Não enviou: " + ((x.j && (x.j.erro || (x.j.error && x.j.error.message))) || "resposta inesperada")); return; }
+            $("#dlg").close();
+            toast(x.j.enviados ? "Relatório enviado para " + x.j.enviados + (x.j.enviados === 1 ? " e-mail" : " e-mails")
+                               : "Relatório gerado, mas nenhum e-mail saiu. Confira o secret MAIL_API_KEY do ia-gateway.");
+            carregarIa();
+          }).catch(function (e) {
+            btn.disabled = false; btn.textContent = "Enviar relatório";
+            toast(explicar(e));
+          });
+      });
+    });
+}
+
+function salvarModoRecarga(btn) {
+  var modo = ($(".ia-seg [aria-pressed='true']") || {}).dataset;
+  modo = modo ? modo.iamodo : "manual";
+  var args = { p_modo: modo, p_valor: null, p_gatilho: null };
+  if (modo === "automatica") {
+    args.p_valor = numCampo("iaAutoValor"); args.p_gatilho = numCampo("iaAutoGatilho");
+    if (!args.p_valor || args.p_valor <= 0) { toast("Informe o valor de cada recarga."); return; }
+    if (args.p_gatilho === null || args.p_gatilho < 0) { toast("Informe o saldo que dispara a recarga."); return; }
+  }
+  iaRpc("ia_salvar_recarga", args, btn).then(function (r) {
+    if (!r) return;
+    toast(modo === "automatica" ? "Recarga automática registrada. Ative também no Console." : "Recarga manual registrada");
+    carregarIa();
+  });
+}
+
+function salvarCfgIa(btn) {
+  var tot = numCampo("iaLimTot"), pct = numCampo("iaPct"), min = numCampo("iaSaldoMin");
+  var emails = $("#iaEmails").value.split(/[,;\s]+/).map(function (x) { return x.trim().toLowerCase(); }).filter(Boolean);
+  if (!tot || tot <= 0) { toast("Informe o limite total do mês."); return; }
+  if (pct === null || pct < 50 || pct > 99) { toast("O aviso vai de 50% a 99%."); return; }
+  if (min === null || min < 0) { toast("Informe o saldo mínimo."); return; }
+  if (!emails.length || emails.some(function (e) { return !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e); })) { toast("Confira os e-mails: separe com vírgula."); return; }
+  iaRpc("ia_salvar_config", { p_alerta_pct: Math.round(pct), p_limite_total: tot, p_saldo_minimo: min, p_email_alertas: emails, p_relatorio: $("#iaRelatorio").checked }, btn)
+    .then(function (r) { if (!r) return; toast("Limites e avisos salvos"); carregarIa(); });
+}
+
+document.addEventListener("click", function (e) {
+  var b = e.target.closest("[data-ialim],[data-iatoken],[data-iasaldo],[data-iarel],[data-ialidas],[data-iamodo],[data-iasalvarmodo],[data-iasalvarcfg]");
+  if (!b) return;
+  var d = b.dataset;
+  if (d.ialim) return dialogoIaLimites(d.ialim);
+  if (d.iatoken) return dialogoIaToken(d.iatoken);
+  if (d.iasaldo) return dialogoIaSaldo(d.iasaldo);
+  if (d.iarel) return dialogoIaRelatorio();
+  if (d.ialidas) return iaRpc("ia_marcar_lidas", {}, b, "Marcando…").then(function (r) { if (r) { toast("Avisos marcados como lidos"); carregarIa(); } });
+  if (d.iamodo) {
+    $$(".ia-seg button").forEach(function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+    $("#iaAuto").hidden = d.iamodo !== "automatica";
+    $("#iaModoTexto").innerHTML = textoModo(d.iamodo, (st.ia && st.ia.config) || {});
+    return;
+  }
+  if (d.iasalvarmodo) return salvarModoRecarga(b);
+  if (d.iasalvarcfg) return salvarCfgIa(b);
+});
+document.addEventListener("change", function (e) {
+  if (e.target && e.target.id === "iaMes") {
+    st.iaMes = e.target.value;
+    $("#painelIa").innerHTML = '<section class="panel"><div class="carregando"><div class="spin"></div>Carregando o consumo…</div></section>';
+    carregarIa();
+  }
+});
 
 /* ---------- Acessos (administrador) ---------- */
 T.acessos = function () {
