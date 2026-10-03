@@ -386,9 +386,11 @@ select.sel{height:40px;padding:0 12px;border:1px solid var(--line);border-radius
 .vazio b{display:block;color:var(--ink);margin-bottom:4px}
 @media (max-width:860px){.login-wrap{grid-template-columns:minmax(0,1fr)}.login-art{display:none}}
 /* ===== v1.3.0: Consumo de IA ===== */
-:root{--ia-atp:#00AEEF;--ia-cct:#BC151B;--ia-fin:#D4B800;--ia-ncm:#4F4C4D}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ia-ncm:#B8B4B5;--ia-fin:#FFE45C}}
-:root[data-theme="dark"]{--ia-ncm:#B8B4B5;--ia-fin:#FFE45C}
+:root{--ia-atp:#00AEEF;--ia-cct:#BC151B;--ia-fin:#D4B800;--ia-ncm:#4F4C4D;--ia-radar:#011F48}
+.ia-recarregar{display:block;margin-top:6px;font-weight:700}
+.ia-contas{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ia-ncm:#B8B4B5;--ia-fin:#FFE45C;--ia-radar:#8FB8E8}}
+:root[data-theme="dark"]{--ia-ncm:#B8B4B5;--ia-fin:#FFE45C;--ia-radar:#8FB8E8}
 .page-head{flex-wrap:wrap}
 .ia-head-acoes{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .ia-head-acoes .sel{width:auto;min-width:150px;height:36px}
@@ -576,8 +578,14 @@ var CFG = {
   }
 };
 
-var VERSAO = "v1.3.0";
+var VERSAO = "v1.4.0";
 var VERSOES = [
+  ["v1.4.0", "03/10/2026",
+   "Consumo de IA com duas contas: Anthropic (texto) e OpenAI (imagens). O resumo mostra o saldo estimado de " +
+   "cada uma, com o botão Recarregar que abre a página de crédito da conta. Lançar recarga e Corrigir o saldo " +
+   "pedem a conta; os lançamentos mostram de qual conta são. Novo aviso de saldo mínimo da OpenAI. Os avisos de " +
+   "crédito acabando trazem o link de recarga (na tela e no e-mail). Últimas chamadas mostram as imagens geradas. " +
+   "Novo aplicativo na lista: Radar. Exige o ia_central_v1.1.0.sql e o ia-gateway v1.1.0."],
   ["v1.3.0", "27/09/2026",
    "Nova tela Consumo de IA (administradores): gasto do mês e do dia de todos os aplicativos com IA, " +
    "saldo estimado na Anthropic, uso de cada aplicativo contra o limite mensal e o do dia, gráfico do " +
@@ -1233,7 +1241,15 @@ T.versoes = function () {
 };
 
 /* ---------- Consumo de IA (administrador da IA Central) — v1.3.0 ---------- */
-var IA_CORES = { atp: "var(--ia-atp)", cct: "var(--ia-cct)", financeiro: "var(--ia-fin)", ncm: "var(--ia-ncm)" };
+var IA_CORES = { atp: "var(--ia-atp)", cct: "var(--ia-cct)", financeiro: "var(--ia-fin)", ncm: "var(--ia-ncm)", radar: "var(--ia-radar)" };
+/* v1.4.0: duas contas. Os links vêm da IA Central (core.ia_config); estes são o padrão se ela ainda for a v1.0.x. */
+var IA_CONTAS = { anthropic: "Anthropic", openai: "OpenAI" };
+var IA_LINKS = { anthropic: "https://platform.claude.com/settings/billing", openai: "https://platform.openai.com/settings/organization/billing/overview" };
+function iaLink(d, conta) {
+  var u = String((d && d.links && d.links[conta]) || IA_LINKS[conta] || "");
+  return /^https:\/\/[!-~]+$/.test(u) && !/["'<>`]/.test(u) ? u : IA_LINKS[conta];
+}
+function iaTemOpenai(d) { return !!(d && d.saldo_openai); }      /* a IA Central v1.1.0 manda o saldo da OpenAI */
 var IA_EXTRA = ["#7A5AF8", "#2E9E6B", "#E07B00", "#9A6B4F"];
 function iaCor(app, i) { return IA_CORES[app] || IA_EXTRA[i % IA_EXTRA.length]; }
 
@@ -1294,7 +1310,7 @@ T.ia = function () {
   st.iaMes = st.iaMes || meses[0].id;
   carregarIa();
   return '<div class="page-head"><div><h1>Consumo de IA</h1>' +
-    "<p>Todos os aplicativos usam uma única conta da Anthropic, pela IA Central. Aqui ficam o gasto de cada um, os limites, os avisos e o saldo.</p></div>" +
+    "<p>Todos os aplicativos usam a IA pela IA Central: texto na conta da Anthropic e imagens na conta da OpenAI. Aqui ficam o gasto de cada um, os limites, os avisos, o saldo e a recarga.</p></div>" +
     '<div class="ia-head-acoes">' +
     '<select class="sel" id="iaMes" aria-label="Mês">' +
     meses.map(function (m) { return '<option value="' + m.id + '"' + (m.id === st.iaMes ? " selected" : "") + ">" + m.nome + "</option>"; }).join("") +
@@ -1320,7 +1336,7 @@ function carregarIa() {
     if (/administradores da IA Central/i.test(m))
       m = "Seu e-mail não está na lista de administradores da IA Central. A lista fica em core.ia_config (coluna admins).";
     if (/ia_painel|function .* does not exist|Could not find the function/i.test((e && e.message) || ""))
-      m = "A IA Central ainda não está instalada neste projeto, ou falta rodar o ia_central_v1.0.1.sql.";
+      m = "A IA Central ainda não está instalada neste projeto, ou falta rodar o ia_central_v1.0.1.sql (e o v1.1.0 para as duas contas).";
     el.innerHTML = '<section class="panel"><div class="vazio"><b>Não deu para carregar o consumo</b>' + esc(m) + "</div></section>";
   });
 }
@@ -1337,6 +1353,16 @@ function painelIa(d) {
   var pctTot = limTot ? Math.min(100, (+d.total_mes || 0) / limTot * 100) : 0;
   var nvTot = nivelUso(+d.total_mes || 0, limTot, alerta);
   var abaixo = s.estimado !== null && s.estimado !== undefined && +s.estimado < +c.saldo_minimo_usd;
+  var so = d.saldo_openai || {}, minO = c.saldo_minimo_openai_usd;
+  var abaixoO = so.estimado !== null && so.estimado !== undefined && +so.estimado < +minO;
+  function kpiSaldo(conta, sd, baixo, minimo) {
+    return '<div class="kpi"><span>Saldo estimado na ' + IA_CONTAS[conta] + (conta === "openai" ? " (imagens)" : " (texto)") + "</span><b>" +
+      (sd.estimado === null || sd.estimado === undefined ? "—" : usd(sd.estimado)) + "</b>" +
+      '<small class="' + (baixo ? "warn" : "mute") + '">' +
+      (sd.informado_em ? (baixo ? "abaixo do mínimo de " + usd(minimo) : "informado em " + dataHora(sd.informado_em).split(" ")[0])
+                       : "lance o saldo da conta") + "</small>" +
+      '<a class="link ia-recarregar" href="' + esc(iaLink(d, conta)) + '" target="_blank" rel="noopener noreferrer" data-recarregar="' + conta + '">Recarregar ↗</a></div>';
+  }
   var ehMesAtual = d.mes === mesesRecentes(1)[0].id;
 
   /* ---- números do mês ---- */
@@ -1346,11 +1372,8 @@ function painelIa(d) {
     '<div class="kpi"><span>Gasto no mês</span><b>' + usd(d.total_mes) + "</b>" +
       '<small class="' + (nvTot ? "warn" : "mute") + '">de ' + usd(limTot) + " (limite total)</small></div>" +
     '<div class="kpi"><span>Gasto hoje</span><b>' + usd(d.total_hoje) + '</b><small class="mute">todos os aplicativos</small></div>' +
-    '<div class="kpi"><span>Saldo estimado na Anthropic</span><b>' +
-      (s.estimado === null || s.estimado === undefined ? "—" : usd(s.estimado)) + "</b>" +
-      '<small class="' + (abaixo ? "warn" : "mute") + '">' +
-      (s.informado_em ? (abaixo ? "abaixo do mínimo de " + usd(c.saldo_minimo_usd) : "informado em " + dataHora(s.informado_em).split(" ")[0])
-                      : "lance o saldo do Console") + "</small></div>" +
+    kpiSaldo("anthropic", s, abaixo, c.saldo_minimo_usd) +
+    (iaTemOpenai(d) ? kpiSaldo("openai", so, abaixoO, minO) : "") +
     '<div class="kpi"><span>Mês anterior</span><b>' + usd(d.total_mes_anterior) + '</b><small class="mute">para comparar</small></div>' +
     "</div>" +
     '<div class="iabar big' + (nvTot ? " " + nvTot : "") + '" role="img" aria-label="' + Math.round(pctTot) + '% do limite total do mês">' +
@@ -1399,7 +1422,9 @@ function painelIa(d) {
       return '<div class="row-li ia-aviso' + (n.lida_em ? " lido" : "") + '">' +
         '<span class="chip ' + (n.nivel === "critico" ? "imp" : n.nivel === "aviso" ? "warn" : "info") + '">' +
         ({ critico: "Crítico", aviso: "Aviso", info: "Info" }[n.nivel] || n.nivel) + "</span>" +
-        "<div><b>" + esc(n.titulo) + "</b><small>" + esc(n.texto) + "</small></div>" +
+        "<div><b>" + esc(n.titulo) + "</b><small>" + esc(n.texto) +
+        (n.link && /^https:\/\/[!-~]+$/.test(n.link) && !/["'<>`]/.test(n.link)
+          ? ' <a class="link" href="' + esc(n.link) + '" target="_blank" rel="noopener noreferrer">Recarregar ↗</a>' : "") + "</small></div>" +
         "<time>" + esc(dataHora(n.em)) + "</time></div>";
     }).join("") : '<div class="vazio"><b>Nenhum aviso</b>Quando um aplicativo chegar perto do limite, ou o saldo baixar, o aviso aparece aqui e vai por e-mail.</div>') +
     "</section>" +
@@ -1470,7 +1495,7 @@ function tabelaUltimas(lista, apps) {
       var r = rot[u.status] || [u.status, ""];
       return "<tr><td>" + esc(dataHora(u.em)) + "</td><td>" + esc(nomes[u.app] || u.app) + "</td>" +
         '<td style="color:var(--ink-2)">' + esc(u.usuario || "—") + "</td>" +
-        "<td>" + num(u.entrada) + " / " + num(u.saida) + "</td><td>" + usdFino(u.custo_usd) + "</td>" +
+        "<td>" + (+u.imagens ? num(u.imagens) + (+u.imagens === 1 ? " imagem" : " imagens") : num(u.entrada) + " / " + num(u.saida)) + "</td><td>" + usdFino(u.custo_usd) + "</td>" +
         '<td><span class="tag ' + r[1] + '"' + (u.detalhe ? ' title="' + esc(u.detalhe) + '"' : "") + ">" + esc(r[0]) + "</span></td></tr>";
     }).join("") + "</tbody></table></div>";
 }
@@ -1479,7 +1504,10 @@ function blocoRecarga(d, rec, c) {
   var auto = rec.modo === "automatica";
   var saldos = d.saldos || [];
   return '<section class="panel" id="blocoRecarga"><div class="panel-head"><h2>' + ic("wallet") + "Recarga de créditos</h2>" +
-    '<a class="link" href="https://platform.claude.com/settings/billing" target="_blank" rel="noopener">Abrir o Console</a></div>' +
+    '<span class="ia-dica">Recarga feita na página de cada conta</span></div>' +
+    '<div class="ia-contas">' +
+    '<a class="btn sm" href="' + esc(iaLink(d, "anthropic")) + '" target="_blank" rel="noopener noreferrer">Recarregar Anthropic ↗</a>' +
+    (iaTemOpenai(d) ? '<a class="btn sm" href="' + esc(iaLink(d, "openai")) + '" target="_blank" rel="noopener noreferrer">Recarregar OpenAI ↗</a>' : "") + "</div>" +
     '<div class="seg ia-seg" role="radiogroup" aria-label="Modo de recarga">' +
     '<button data-iamodo="manual" aria-pressed="' + !auto + '">Manual</button>' +
     '<button data-iamodo="automatica" aria-pressed="' + auto + '">Automática</button></div>' +
@@ -1491,21 +1519,23 @@ function blocoRecarga(d, rec, c) {
     '<button class="btn sm primary" data-iasalvarmodo="1">Salvar modo de recarga</button>' +
     '<button class="btn sm" data-iasaldo="saldo_informado">Corrigir o saldo</button></div>' +
     '<h3 class="ia-sub">Lançamentos de saldo</h3>' +
-    (saldos.length ? '<div style="overflow-x:auto"><table class="tb"><thead><tr><th>Quando</th><th>Tipo</th><th>Valor</th><th>Observação</th></tr></thead><tbody>' +
+    (saldos.length ? '<div style="overflow-x:auto"><table class="tb"><thead><tr><th>Quando</th><th>Conta</th><th>Tipo</th><th>Valor</th><th>Observação</th></tr></thead><tbody>' +
       saldos.map(function (x) {
-        return "<tr><td>" + esc(dataHora(x.em)) + "</td><td>" + (x.tipo === "recarga" ? "Recarga" : "Saldo do Console") + "</td>" +
+        return "<tr><td>" + esc(dataHora(x.em)) + "</td><td>" + esc(IA_CONTAS[x.provedor] || "Anthropic") + "</td><td>" + (x.tipo === "recarga" ? "Recarga" : "Saldo informado") + "</td>" +
           "<td>" + usd(x.valor_usd) + '</td><td style="white-space:normal;color:var(--ink-2)">' + esc(x.obs || "") + "</td></tr>";
       }).join("") + "</tbody></table></div>"
-      : '<div class="vazio"><b>Nenhum lançamento</b>Lance o saldo que o Console mostra para o portal estimar quanto resta.</div>') +
+      : '<div class="vazio"><b>Nenhum lançamento</b>Lance o saldo que a página de cada conta mostra para o portal estimar quanto resta.</div>') +
     "</section>";
 }
 
 function textoModo(modo, c) {
   if (modo === "automatica")
-    return '<p class="ia-nota">O Console da Anthropic recarrega sozinho. Ative lá também, com os mesmos valores, em Billing, opção de recarga automática. ' +
+    return '<p class="ia-nota">Com a recarga automática, a conta se recarrega sozinha. Ative na página de cobrança de cada conta que quiser (Anthropic e, se for o caso, OpenAI), com os mesmos valores. ' +
       "A cada recibo que chegar por e-mail, lance a recarga aqui para o saldo estimado continuar certo.</p>";
-  return '<p class="ia-nota">Você compra os créditos no Console quando precisar (Billing, Adicionar fundos) e lança a recarga aqui. ' +
-    "Quando o saldo estimado ficar abaixo de " + usd(c.saldo_minimo_usd) + ", chega um aviso no portal e por e-mail.</p>";
+  return '<p class="ia-nota">Você compra os créditos na página de cada conta quando precisar (botões acima) e lança a recarga aqui. ' +
+    "Quando o saldo estimado ficar abaixo do mínimo (" + usd(c.saldo_minimo_usd) + " na Anthropic" +
+    (c.saldo_minimo_openai_usd !== undefined ? ", " + usd(c.saldo_minimo_openai_usd) + " na OpenAI" : "") +
+    "), chega um aviso no portal e por e-mail, com o link da recarga. No dia 1 de cada mês vai o relatório do mês anterior.</p>";
 }
 
 function blocoAlertas(c) {
@@ -1513,7 +1543,9 @@ function blocoAlertas(c) {
     '<div class="ia-form">' +
     '<div class="f"><label for="iaLimTot">Limite total do mês, todos os aplicativos (US$)</label><input id="iaLimTot" type="number" min="1" step="1" value="' + esc(c.limite_total_mensal_usd) + '"></div>' +
     '<div class="f"><label for="iaPct">Avisar ao atingir (% do limite)</label><input id="iaPct" type="number" min="50" max="99" step="1" value="' + esc(c.alerta_pct) + '"></div>' +
-    '<div class="f"><label for="iaSaldoMin">Avisar quando o saldo cair abaixo de (US$)</label><input id="iaSaldoMin" type="number" min="0" step="1" value="' + esc(c.saldo_minimo_usd) + '"></div>' +
+    '<div class="f"><label for="iaSaldoMin">Avisar quando o saldo da Anthropic cair abaixo de (US$)</label><input id="iaSaldoMin" type="number" min="0" step="1" value="' + esc(c.saldo_minimo_usd) + '"></div>' +
+    (c.saldo_minimo_openai_usd !== undefined
+      ? '<div class="f"><label for="iaSaldoMinO">Avisar quando o saldo da OpenAI cair abaixo de (US$)</label><input id="iaSaldoMinO" type="number" min="0" step="1" value="' + esc(c.saldo_minimo_openai_usd) + '"></div>' : "") +
     '<div class="f"><label for="iaEmails">E-mails que recebem avisos e relatório</label><input id="iaEmails" type="text" value="' + esc((c.email_alertas || []).join(", ")) + '"></div>' +
     '<label class="ia-check"><input type="checkbox" id="iaRelatorio"' + (c.relatorio_mensal ? " checked" : "") + "> Enviar o relatório do mês no dia 1, às 8h</label>" +
     "</div>" +
@@ -1593,10 +1625,12 @@ function dialogoIaSaldo(tipo) {
   abrirDialogo(
     "<h2>" + (recarga ? "Lançar recarga" : "Corrigir o saldo") + "</h2>" +
     (recarga
-      ? "<p>Informe o valor que você comprou no Console. Ele soma ao saldo estimado.</p>"
-      : "<p>Informe o saldo exato que o Console mostra agora (Créditos da organização). Ele passa a ser o novo ponto de partida da estimativa.</p>") +
-    '<div class="f"><label for="sVal">' + (recarga ? "Valor da recarga (US$)" : "Saldo atual no Console (US$)") + '</label><input id="sVal" type="number" min="0" step="0.01"></div>' +
-    '<div class="f"><label for="sObs">Observação (opcional)</label><input id="sObs" type="text" placeholder="' + (recarga ? "recibo de " + hojeCurto() : "conferido no Console em " + hojeCurto()) + '"></div>' +
+      ? "<p>Informe o valor que você comprou na página da conta. Ele soma ao saldo estimado dela.</p>"
+      : "<p>Informe o saldo exato que a página da conta mostra agora. Ele passa a ser o novo ponto de partida da estimativa.</p>") +
+    (iaTemOpenai(st.ia)
+      ? '<div class="f"><label for="sConta">Conta</label><select class="sel" id="sConta"><option value="">— escolher a conta —</option><option value="anthropic">Anthropic (texto)</option><option value="openai">OpenAI (imagens)</option></select></div>' : "") +
+    '<div class="f"><label for="sVal">' + (recarga ? "Valor da recarga (US$)" : "Saldo atual da conta (US$)") + '</label><input id="sVal" type="number" min="0" step="0.01"></div>' +
+    '<div class="f"><label for="sObs">Observação (opcional)</label><input id="sObs" type="text" placeholder="' + (recarga ? "recibo de " + hojeCurto() : "conferido na conta em " + hojeCurto()) + '"></div>' +
     '<div class="dlg-acoes"><button class="btn" data-fechar>Cancelar</button><button class="btn primary" id="sOkIa">' + (recarga ? "Lançar recarga" : "Corrigir o saldo") + "</button></div>",
     function () {
       $("#sVal").focus();
@@ -1604,10 +1638,14 @@ function dialogoIaSaldo(tipo) {
         var v = numCampo("sVal");
         if (v === null || v < 0 || (recarga && v === 0)) { toast("Informe um valor válido."); return; }
         var obs = $("#sObs").value.trim() || $("#sObs").placeholder;
-        iaRpc("ia_lancar_saldo", { p_tipo: tipo, p_valor: v, p_obs: obs }, this).then(function (r) {
+        if ($("#sConta") && !$("#sConta").value) { toast("Escolha a conta: Anthropic ou OpenAI."); return; }
+        var conta = ($("#sConta") || {}).value || "anthropic";
+        var args = { p_tipo: tipo, p_valor: v, p_obs: obs };
+        if ($("#sConta")) args.p_provedor = conta;            /* só existe na IA Central v1.1.0 */
+        iaRpc("ia_lancar_saldo", args, this).then(function (r) {
           if (!r) return;
           $("#dlg").close();
-          toast((recarga ? "Recarga lançada" : "Saldo corrigido") + ". Saldo estimado: " + usd(r.data.saldo_estimado));
+          toast((recarga ? "Recarga lançada" : "Saldo corrigido") + " na " + IA_CONTAS[conta] + ". Saldo estimado: " + usd(r.data.saldo_estimado));
           carregarIa();
         });
       });
@@ -1675,7 +1713,13 @@ function salvarCfgIa(btn) {
   if (pct === null || pct < 50 || pct > 99) { toast("O aviso vai de 50% a 99%."); return; }
   if (min === null || min < 0) { toast("Informe o saldo mínimo."); return; }
   if (!emails.length || emails.some(function (e) { return !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e); })) { toast("Confira os e-mails: separe com vírgula."); return; }
-  iaRpc("ia_salvar_config", { p_alerta_pct: Math.round(pct), p_limite_total: tot, p_saldo_minimo: min, p_email_alertas: emails, p_relatorio: $("#iaRelatorio").checked }, btn)
+  var cfg = { p_alerta_pct: Math.round(pct), p_limite_total: tot, p_saldo_minimo: min, p_email_alertas: emails, p_relatorio: $("#iaRelatorio").checked };
+  if ($("#iaSaldoMinO")) {
+    var minO = numCampo("iaSaldoMinO");
+    if (minO === null || minO < 0) { toast("Informe o saldo mínimo da OpenAI."); return; }
+    cfg.p_saldo_minimo_openai = minO;
+  }
+  iaRpc("ia_salvar_config", cfg, btn)
     .then(function (r) { if (!r) return; toast("Limites e avisos salvos"); carregarIa(); });
 }
 
