@@ -397,6 +397,7 @@ select.sel{height:40px;padding:0 12px;border:1px solid var(--line);border-radius
 select.sel{color:var(--ink)}
 #painelIa{display:grid;grid-template-columns:minmax(0,1fr);gap:20px}
 #painelIa .kpi{cursor:default}
+#painelFala:empty{display:none}
 #painelIa .dlg-acoes{flex-wrap:wrap}
 .iabar{position:relative;height:8px;border-radius:99px;background:var(--surface-2);overflow:visible;margin:10px 0 4px}
 .iabar.big{height:12px;margin-top:4px}
@@ -580,8 +581,12 @@ var CFG = {
   }
 };
 
-var VERSAO = "v1.5.0";
+var VERSAO = "v1.6.0";
 var VERSOES = [
+  ["v1.6.0", "11/10/2026",
+   "Consumo de IA mostra também a transcrição de áudio da Azure (os áudios que a equipe manda ao WhatsApp do " +
+   "Agenda Pro): minutos usados no mês e no dia contra as 5 h grátis por mês do plano F0, por aplicativo. " +
+   "Exige o nucleo_ia_fala.sql e o serviço do WhatsApp v1.5.1."],
   ["v1.5.0", "10/10/2026",
    "Agenda Pro com o mesmo controle do Cobrança Pro na tela de Acessos: liberar o Agenda Pro cria o login da pessoa " +
    "(ou aproveita o que ela já tem, que é o mesmo do Financeiro Pro) e a cadastra no Agenda com o nível escolhido " +
@@ -771,6 +776,7 @@ I.clock = '<circle cx="12" cy="12" r="8.500"/><path d="M12 7.500V12l3 2"/>';
 I.target = '<circle cx="12" cy="13" r="8"/><circle cx="12" cy="13" r="4.500"/><circle cx="12" cy="13" r="1"/><path d="M12 13l7-7M16 5.500l3 .500.500 3"/>';
 I.cloud = '<path d="M7 18a4 4 0 0 1-.500-7.970A6 6 0 0 1 18 9.500a4.250 4.250 0 0 1 0 8.500z"/>';
 I.spark = '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM18.5 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/>';
+I.mic = '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.500 11a6.500 6.500 0 0 0 13 0M12 17.500V21M8.500 21h7"/>';
 I.headset = '<path d="M5 14v-2a7 7 0 0 1 14 0v2M5 14a2 2 0 0 1 2-2h1v6H7a2 2 0 0 1-2-2zM19 14a2 2 0 0 0-2-2h-1v6h1a2 2 0 0 0 2-2zM19 16v1a3 3 0 0 1-3 3h-3"/>';
 
 var ICONE_AREA = { dp: "users", tributario: "chart", contabil_financeiro: "wallet", gestao: "brief", adm: "tool" };
@@ -1318,7 +1324,7 @@ T.ia = function () {
   st.iaMes = st.iaMes || meses[0].id;
   carregarIa();
   return '<div class="page-head"><div><h1>Consumo de IA</h1>' +
-    "<p>Todos os aplicativos usam a IA pela IA Central: texto na conta da Anthropic e imagens na conta da OpenAI. Aqui ficam o gasto de cada um, os limites, os avisos, o saldo e a recarga.</p></div>" +
+    "<p>Todos os aplicativos usam a IA pela IA Central: texto na conta da Anthropic e imagens na conta da OpenAI. Aqui ficam o gasto de cada um, os limites, os avisos, o saldo e a recarga. A transcrição de áudio (Azure) aparece em minutos, no quadro próprio.</p></div>" +
     '<div class="ia-head-acoes">' +
     '<select class="sel" id="iaMes" aria-label="Mês">' +
     meses.map(function (m) { return '<option value="' + m.id + '"' + (m.id === st.iaMes ? " selected" : "") + ">" + m.nome + "</option>"; }).join("") +
@@ -1328,7 +1334,52 @@ T.ia = function () {
     '<div id="painelIa"><section class="panel"><div class="carregando"><div class="spin"></div>Carregando o consumo…</div></section></div>';
 };
 
+/* v1.6.0: transcrição de áudio da Azure (minutos, plano gratuito) — core.ia_fala_painel */
+function carregarIaFala() {
+  var mes = st.iaMes;
+  sb.schema("core").rpc("ia_fala_painel", { p_mes: mes + "-01" }).then(function (r) {
+    if (mes !== st.iaMes) return;
+    st.iaFala = r.error ? null : r.data;
+    var el = $("#painelFala"); if (el) el.innerHTML = st.iaFala ? painelFala(st.iaFala, st.iaMes) : "";
+  }, function () { st.iaFala = null; });
+}
+function minTexto(seg) {
+  var m = (+seg || 0) / 60;
+  return (m > 0 && m < 0.1 ? "menos de 0,1" : m.toLocaleString("pt-BR", { maximumFractionDigits: 1 })) + " min";
+}
+function painelFala(f, mes) {
+  var franquia = +f.franquia_seg || 18000, total = +f.total_seg || 0, apps = f.apps || [];
+  var pct = Math.min(100, total / franquia * 100), nv = nivelUso(total, franquia, 80);
+  var ehMesAtual = mes === mesesRecentes(1)[0].id;
+  return '<section class="panel"><div class="panel-head"><h2>' + ic("mic") + "Transcrição de áudio (Azure)</h2>" +
+    '<span class="ia-dica">Plano gratuito: 5 h por mês</span></div>' +
+    '<div class="kpis">' +
+    '<div class="kpi"><span>Usado no mês</span><b>' + minTexto(total) + "</b>" +
+      '<small class="' + (nv ? "warn" : "mute") + '">de ' + minTexto(franquia) + " grátis</small></div>" +
+    (ehMesAtual ? '<div class="kpi"><span>Usado hoje</span><b>' + minTexto(f.total_hoje) + '</b><small class="mute">todos os aplicativos</small></div>' : "") +
+    '<div class="kpi"><span>Custo</span><b>' + usd(0) + '</b><small class="mute">dentro do plano gratuito</small></div>' +
+    "</div>" +
+    '<div class="iabar big' + (nv ? " " + nv : "") + '" role="img" aria-label="' + Math.round(pct) + '% das 5 h grátis do mês">' +
+    '<i style="width:' + pct.toFixed(1) + '%"></i><em style="left:80%" title="aviso em 80%"></em></div>' +
+    '<p class="ia-nota">' + Math.round(pct) + "% das 5 h grátis do mês. Recurso: " + esc(f.recurso || "voz da Azure") + ". " +
+    "Passando disso a Azure não cobra: recusa os áudios até o mês virar, e a equipe recebe a resposta para mandar por texto. " +
+    "As 5 h são do recurso inteiro, e só os aplicativos abaixo informam o uso aqui.</p>" +
+    '<div class="ia-apps">' + apps.map(function (a, i) {
+      return '<article class="ia-app">' +
+        '<div class="ia-app-top"><i class="dot" style="background:' + iaCor(a.app, i) + '"></i>' +
+        '<div class="ia-app-nome"><b>' + esc(a.nome) + "</b><small>transcrição pt-BR, até 60 s por áudio</small></div></div>" +
+        '<div class="ia-app-num"><b>' + minTexto(a.segundos_mes) + "</b><span>no mês</span></div>" +
+        '<dl class="ia-dl">' +
+        "<div><dt>Áudios no mês</dt><dd>" + num(a.audios_mes) + "</dd></div>" +
+        (ehMesAtual ? "<div><dt>Hoje</dt><dd>" + minTexto(a.segundos_hoje) + "</dd></div>" : "") +
+        "<div><dt>Último uso</dt><dd>" + (a.ultimo_uso ? esc(quandoTexto(a.ultimo_uso)) : "nunca") + "</dd></div>" +
+        "<div><dt>Token</dt><dd>" + (a.tem_token ? "ligado" : '<span class="warn-t">não ligado</span>') + "</dd></div>" +
+        "</dl></article>";
+    }).join("") + "</div></section>";
+}
+
 function carregarIa() {
+  carregarIaFala();
   sb.schema("core").rpc("ia_painel", { p_mes: st.iaMes + "-01" }).then(function (r) {
     if (r.error) throw r.error;
     st.ia = r.data;
@@ -1415,6 +1466,9 @@ function painelIa(d) {
         '<button class="mini" data-iatoken="' + esc(a.app) + '">' + (a.tem_token ? "Trocar token" : "Gerar token") + "</button></div>" +
         "</article>";
     }).join("") + "</div></section>";
+
+  /* ---- v1.6.0: transcrição de áudio (preenchido por carregarIaFala) ---- */
+  h += '<div id="painelFala">' + (st.iaFala && st.iaFala.mes === d.mes ? painelFala(st.iaFala, d.mes) : "") + "</div>";
 
   /* ---- gráfico diário ---- */
   h += '<section class="panel"><div class="panel-head"><h2>' + ic("cal") + "Gasto por dia</h2>" +
