@@ -398,6 +398,11 @@ select.sel{color:var(--ink)}
 #painelIa{display:grid;grid-template-columns:minmax(0,1fr);gap:20px}
 #painelIa .kpi{cursor:default}
 #painelFala:empty{display:none}
+.fala-cards{display:contents}
+.fala-cotas{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:18px 28px}
+.fala-cota>span{display:block;font-size:12.5px;color:var(--ink-2)}
+.fala-cota-num{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin-top:2px}
+.fala-cota-num b{font:800 22px/1.25 var(--font-title)}.fala-cota-num small{color:var(--ink-3);font-size:12.5px}
 #painelIa .dlg-acoes{flex-wrap:wrap}
 .iabar{position:relative;height:8px;border-radius:99px;background:var(--surface-2);overflow:visible;margin:10px 0 4px}
 .iabar.big{height:12px;margin-top:4px}
@@ -581,8 +586,14 @@ var CFG = {
   }
 };
 
-var VERSAO = "v1.6.0";
+var VERSAO = "v1.7.0";
 var VERSOES = [
+  ["v1.7.0", "11/10/2026",
+   "Consumo de IA: cada uso da Azure (recurso artecon-voz, plano gratuito) virou um cartão em Por aplicativo, como os " +
+   "demais: Agenda (áudios do WhatsApp, em minutos), Projeto Criança e Estudo da Reforma (voz gerada, em caracteres). " +
+   "O quadro Azure mostra as duas cotas grátis do mês (5 h de transcrição e 500 mil caracteres de voz), já com o uso " +
+   "do Projeto Criança e do Estudo, e tem o botão Lançar uso (com Desfazer) para a voz gerada de vez em quando. " +
+   "Exige o nucleo_ia_fala_v2.sql."],
   ["v1.6.0", "11/10/2026",
    "Consumo de IA mostra também a transcrição de áudio da Azure (os áudios que a equipe manda ao WhatsApp do " +
    "Agenda Pro): minutos usados no mês e no dia contra as 5 h grátis por mês do plano F0, por aplicativo. " +
@@ -1324,7 +1335,7 @@ T.ia = function () {
   st.iaMes = st.iaMes || meses[0].id;
   carregarIa();
   return '<div class="page-head"><div><h1>Consumo de IA</h1>' +
-    "<p>Todos os aplicativos usam a IA pela IA Central: texto na conta da Anthropic e imagens na conta da OpenAI. Aqui ficam o gasto de cada um, os limites, os avisos, o saldo e a recarga. A transcrição de áudio (Azure) aparece em minutos, no quadro próprio.</p></div>" +
+    "<p>Todos os aplicativos usam a IA pela IA Central: texto na conta da Anthropic e imagens na conta da OpenAI. Aqui ficam o gasto de cada um, os limites, os avisos, o saldo e a recarga. A voz e a transcrição da Azure (plano gratuito) aparecem em cartões próprios, em caracteres e minutos.</p></div>" +
     '<div class="ia-head-acoes">' +
     '<select class="sel" id="iaMes" aria-label="Mês">' +
     meses.map(function (m) { return '<option value="' + m.id + '"' + (m.id === st.iaMes ? " selected" : "") + ">" + m.nome + "</option>"; }).join("") +
@@ -1334,12 +1345,16 @@ T.ia = function () {
     '<div id="painelIa"><section class="panel"><div class="carregando"><div class="spin"></div>Carregando o consumo…</div></section></div>';
 };
 
-/* v1.6.0: transcrição de áudio da Azure (minutos, plano gratuito) — core.ia_fala_painel */
+/* v1.6.0 / v1.7.0: Azure (recurso artecon-voz, plano gratuito F0) — core.ia_fala_painel.
+   Duas cotas do recurso inteiro: transcrição (fala → texto, 5 h/mês) e voz (texto → fala, 500 mil caracteres/mês).
+   Cada aplicativo vira um cartão em "Por aplicativo"; o quadro "Azure" mostra as duas cotas e os lançamentos à mão. */
+var FALA_CORES = { agenda: "#0E8A7E", crianca: "#E8590C", estudo: "#5C7CFA" };
 function carregarIaFala() {
   var mes = st.iaMes;
   sb.schema("core").rpc("ia_fala_painel", { p_mes: mes + "-01" }).then(function (r) {
     if (mes !== st.iaMes) return;
     st.iaFala = r.error ? null : r.data;
+    var c = $("#falaCards"); if (c) c.innerHTML = st.iaFala ? cartoesFala(st.iaFala, st.iaMes) : "";
     var el = $("#painelFala"); if (el) el.innerHTML = st.iaFala ? painelFala(st.iaFala, st.iaMes) : "";
   }, function () { st.iaFala = null; });
 }
@@ -1347,35 +1362,116 @@ function minTexto(seg) {
   var m = (+seg || 0) / 60;
   return (m > 0 && m < 0.1 ? "menos de 0,1" : m.toLocaleString("pt-BR", { maximumFractionDigits: 1 })) + " min";
 }
-function painelFala(f, mes) {
-  var franquia = +f.franquia_seg || 18000, total = +f.total_seg || 0, apps = f.apps || [];
-  var pct = Math.min(100, total / franquia * 100), nv = nivelUso(total, franquia, 80);
+function carTexto(n) {
+  n = +n || 0;
+  if (n >= 1000) return (n / 1000).toLocaleString("pt-BR", { maximumFractionDigits: n >= 100000 ? 0 : 1 }) + " mil caracteres";
+  return num(n) + (n === 1 ? " caractere" : " caracteres");
+}
+function falaVoz(a) { return a && a.tipo === "voz"; }
+function falaQtd(a, campo) { return falaVoz(a) ? carTexto(a["caracteres_" + campo]) : minTexto(a["segundos_" + campo]); }
+function cartoesFala(f, mes) {
   var ehMesAtual = mes === mesesRecentes(1)[0].id;
-  return '<section class="panel"><div class="panel-head"><h2>' + ic("mic") + "Transcrição de áudio (Azure)</h2>" +
-    '<span class="ia-dica">Plano gratuito: 5 h por mês</span></div>' +
-    '<div class="kpis">' +
-    '<div class="kpi"><span>Usado no mês</span><b>' + minTexto(total) + "</b>" +
-      '<small class="' + (nv ? "warn" : "mute") + '">de ' + minTexto(franquia) + " grátis</small></div>" +
-    (ehMesAtual ? '<div class="kpi"><span>Usado hoje</span><b>' + minTexto(f.total_hoje) + '</b><small class="mute">todos os aplicativos</small></div>' : "") +
-    '<div class="kpi"><span>Custo</span><b>' + usd(0) + '</b><small class="mute">dentro do plano gratuito</small></div>' +
+  var fs = +f.franquia_seg || 18000, fc = +f.franquia_caracteres || 500000;
+  return (f.apps || []).map(function (a, i) {
+    var voz = falaVoz(a), usado = voz ? +a.caracteres_mes || 0 : +a.segundos_mes || 0, cota = voz ? fc : fs;
+    var pct = Math.min(100, usado / cota * 100), nv = nivelUso(usado, cota, 80);
+    return '<article class="ia-app">' +
+      '<div class="ia-app-top"><i class="dot" style="background:' + (FALA_CORES[a.app] || IA_EXTRA[i % IA_EXTRA.length]) + '"></i>' +
+      '<div class="ia-app-nome"><b>' + esc(a.nome) + "</b><small>" +
+        esc(a.descricao || (voz ? "voz da Azure (texto → fala)" : "transcrição da Azure (fala → texto)")) + "</small></div>" +
+      '<span class="tag ok">grátis</span></div>' +
+      '<div class="ia-app-num"><b>' + (voz ? carTexto(usado) : minTexto(usado)) + "</b><span>de " + (voz ? "500 mil" : "300 min") + " no mês</span></div>" +
+      '<div class="iabar' + (nv ? " " + nv : "") + '"><i style="width:' + pct.toFixed(1) + '%"></i><em style="left:80%"></em></div>' +
+      '<dl class="ia-dl">' +
+      "<div><dt>Hoje</dt><dd>" + (ehMesAtual ? falaQtd(a, "hoje") : "—") + "</dd></div>" +
+      "<div><dt>" + (voz ? "Lançamentos no mês" : "Áudios no mês") + "</dt><dd>" + num(a.audios_mes) + "</dd></div>" +
+      "<div><dt>Último uso</dt><dd>" + (a.ultimo_uso ? esc(quandoTexto(a.ultimo_uso)) : "nunca") + "</dd></div>" +
+      "<div><dt>Conta</dt><dd>Azure · " + (voz ? "lançado à mão" : (a.tem_token ? "informado sozinho" : '<span class="warn-t">sem token</span>')) + "</dd></div>" +
+      "</dl>" +
+      (voz ? '<div class="acoes" style="justify-content:flex-start"><button class="mini" data-falalancar="' + esc(a.app) + '">Lançar uso</button></div>' : "") +
+      "</article>";
+  }).join("");
+}
+function painelFala(f, mes) {
+  var ehMesAtual = mes === mesesRecentes(1)[0].id;
+  var fs = +f.franquia_seg || 18000, ts = +f.total_seg || 0, fc = +f.franquia_caracteres || 500000, tc = +f.total_caracteres || 0;
+  function cota(rotulo, usado, total, txtUsado, txtTotal, hoje) {
+    var pct = Math.min(100, usado / total * 100), nv = nivelUso(usado, total, 80);
+    return '<div class="fala-cota"><span>' + rotulo + "</span>" +
+      '<div class="fala-cota-num"><b>' + txtUsado + "</b><small>de " + txtTotal + " · " + Math.round(pct) + "%" + (hoje ? " · hoje " + hoje : "") + "</small></div>" +
+      '<div class="iabar big' + (nv ? " " + nv : "") + '" role="img" aria-label="' + Math.round(pct) + "% de " + esc(txtTotal) + '">' +
+      '<i style="width:' + pct.toFixed(1) + '%"></i><em style="left:80%" title="aviso em 80%"></em></div></div>';
+  }
+  var lanc = f.lancamentos || [], nomes = {};
+  (f.apps || []).forEach(function (a) { nomes[a.app] = a.nome; });
+  return '<section class="panel"><div class="panel-head"><h2>' + ic("mic") + "Azure — voz e transcrição</h2>" +
+    '<button class="btn sm" data-falalancar="">Lançar uso</button></div>' +
+    '<div class="fala-cotas">' +
+    cota("Transcrição (fala → texto)", ts, fs, minTexto(ts), "300 min (5 h)", ehMesAtual ? minTexto(f.total_hoje) : "") +
+    cota("Voz (texto → fala)", tc, fc, carTexto(tc), "500 mil caracteres", ehMesAtual ? carTexto(f.total_caracteres_hoje) : "") +
     "</div>" +
-    '<div class="iabar big' + (nv ? " " + nv : "") + '" role="img" aria-label="' + Math.round(pct) + '% das 5 h grátis do mês">' +
-    '<i style="width:' + pct.toFixed(1) + '%"></i><em style="left:80%" title="aviso em 80%"></em></div>' +
-    '<p class="ia-nota">' + Math.round(pct) + "% das 5 h grátis do mês. Recurso: " + esc(f.recurso || "voz da Azure") + ". " +
-    "Passando disso a Azure não cobra: recusa os áudios até o mês virar, e a equipe recebe a resposta para mandar por texto. " +
-    "As 5 h são do recurso inteiro, e só os aplicativos abaixo informam o uso aqui.</p>" +
-    '<div class="ia-apps">' + apps.map(function (a, i) {
-      return '<article class="ia-app">' +
-        '<div class="ia-app-top"><i class="dot" style="background:' + iaCor(a.app, i) + '"></i>' +
-        '<div class="ia-app-nome"><b>' + esc(a.nome) + "</b><small>transcrição pt-BR, até 60 s por áudio</small></div></div>" +
-        '<div class="ia-app-num"><b>' + minTexto(a.segundos_mes) + "</b><span>no mês</span></div>" +
-        '<dl class="ia-dl">' +
-        "<div><dt>Áudios no mês</dt><dd>" + num(a.audios_mes) + "</dd></div>" +
-        (ehMesAtual ? "<div><dt>Hoje</dt><dd>" + minTexto(a.segundos_hoje) + "</dd></div>" : "") +
-        "<div><dt>Último uso</dt><dd>" + (a.ultimo_uso ? esc(quandoTexto(a.ultimo_uso)) : "nunca") + "</dd></div>" +
-        "<div><dt>Token</dt><dd>" + (a.tem_token ? "ligado" : '<span class="warn-t">não ligado</span>') + "</dd></div>" +
-        "</dl></article>";
-    }).join("") + "</div></section>";
+    '<p class="ia-nota">Recurso ' + esc(f.recurso || "de voz da Azure") + ": as duas cotas são do mês e valem para todos os " +
+    "aplicativos juntos (os cartões em Por aplicativo). Custo: " + usd(0) + ". Passando da cota a Azure não cobra: recusa até o mês virar " +
+    "(o áudio do WhatsApp recebe \"mande por texto\" e não sai fala nova). A transcrição do Agenda entra sozinha; a voz gerada para o " +
+    "Projeto Criança e para o Estudo da Reforma entra por <b>Lançar uso</b>.</p>" +
+    (lanc.length
+      ? '<h3 class="ia-sub">Lançados à mão</h3><div style="overflow-x:auto"><table class="tb"><thead><tr><th>Quando</th><th>Aplicativo</th><th>Quantidade</th><th>Observação</th><th></th></tr></thead><tbody>' +
+        lanc.map(function (l) {
+          return "<tr><td>" + esc(dataHora(l.em)) + "</td><td>" + esc(nomes[l.app] || l.app) + "</td><td>" +
+            (l.tipo === "voz" ? carTexto(l.caracteres) : minTexto(l.segundos)) + '</td><td style="color:var(--ink-2)">' + esc(l.detalhe || "—") +
+            '</td><td><button class="link" data-faladesfazer="' + esc(String(l.id)) + '">Desfazer</button></td></tr>';
+        }).join("") + "</tbody></table></div>"
+      : "") +
+    "</section>";
+}
+function hojeSP() { return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date()); }
+function dialogoFalaLancar(app) {
+  var apps = (st.iaFala && st.iaFala.apps) || [];
+  if (!apps.length) return;
+  var a0 = apps.filter(function (a) { return a.app === app; })[0] || apps.filter(falaVoz)[0] || apps[0];
+  abrirDialogo(
+    "<h2>Lançar uso da Azure</h2>" +
+    "<p>Para o uso que o aplicativo não informa sozinho, como as falas geradas para o Projeto Criança ou para o Estudo da Reforma. " +
+    "Entra no mês da data escolhida.</p>" +
+    '<div class="f"><label for="fApp">Aplicativo</label><select class="sel" id="fApp">' +
+    apps.map(function (a) { return '<option value="' + esc(a.app) + '"' + (a.app === a0.app ? " selected" : "") + ">" + esc(a.nome) + "</option>"; }).join("") +
+    "</select></div>" +
+    '<div class="f"><label for="fQtd" id="fQtdRot">Quantidade</label><input id="fQtd" type="number" min="1" step="1"></div>' +
+    '<div class="f"><label for="fData">Data</label><input id="fData" type="date" value="' + hojeSP() + '"></div>' +
+    '<div class="f"><label for="fObs">Observação (opcional)</label><input id="fObs" type="text" placeholder="ex.: falas novas da versão 0.4.5"></div>' +
+    '<div class="dlg-acoes"><button class="btn" data-fechar>Cancelar</button><button class="btn primary" id="fOk">Lançar</button></div>',
+    function () {
+      function rotulo() {
+        var a = apps.filter(function (x) { return x.app === $("#fApp").value; })[0];
+        $("#fQtdRot").textContent = falaVoz(a) ? "Caracteres gerados" : "Segundos de áudio transcritos";
+      }
+      rotulo();
+      $("#fApp").addEventListener("change", rotulo);
+      $("#fQtd").focus();
+      $("#fOk").addEventListener("click", function () {
+        var q = numCampo("fQtd");
+        if (!q || q <= 0 || Math.round(q) !== q) { toast("Informe uma quantidade inteira maior que zero."); return; }
+        var data = $("#fData").value;
+        iaRpc("ia_fala_lancar", { p_app: $("#fApp").value, p_quantidade: q, p_detalhe: $("#fObs").value.trim() || null,
+                                  p_em: data ? data + "T12:00:00-03:00" : null }, this).then(function (r) {
+          if (!r) return;
+          $("#dlg").close(); toast("Uso lançado"); carregarIa();
+        });
+      });
+    });
+}
+function dialogoFalaDesfazer(id) {
+  abrirDialogo(
+    "<h2>Desfazer lançamento</h2><p>O lançamento sai das somas. Ele continua guardado, marcado como desfeito.</p>" +
+    '<div class="dlg-acoes"><button class="btn" data-fechar>Cancelar</button><button class="btn primary" id="fdOk">Desfazer</button></div>',
+    function () {
+      $("#fdOk").addEventListener("click", function () {
+        iaRpc("ia_fala_desfazer", { p_id: +id }, this, "Desfazendo…").then(function (r) {
+          if (!r) return;
+          $("#dlg").close(); toast("Lançamento desfeito"); carregarIa();
+        });
+      });
+    });
 }
 
 function carregarIa() {
@@ -1465,9 +1561,12 @@ function painelIa(d) {
         '<button class="mini" data-ialim="' + esc(a.app) + '">Limites</button>' +
         '<button class="mini" data-iatoken="' + esc(a.app) + '">' + (a.tem_token ? "Trocar token" : "Gerar token") + "</button></div>" +
         "</article>";
-    }).join("") + "</div></section>";
+    }).join("") +
+    /* v1.7.0: cartões da Azure (voz e transcrição), preenchidos por carregarIaFala */
+    '<div id="falaCards" class="fala-cards">' + (st.iaFala && st.iaFala.mes === d.mes ? cartoesFala(st.iaFala, d.mes) : "") + "</div>" +
+    "</div></section>";
 
-  /* ---- v1.6.0: transcrição de áudio (preenchido por carregarIaFala) ---- */
+  /* ---- v1.6.0 / v1.7.0: Azure — as duas cotas e os lançamentos (preenchido por carregarIaFala) ---- */
   h += '<div id="painelFala">' + (st.iaFala && st.iaFala.mes === d.mes ? painelFala(st.iaFala, d.mes) : "") + "</div>";
 
   /* ---- gráfico diário ---- */
@@ -1786,9 +1885,11 @@ function salvarCfgIa(btn) {
 }
 
 document.addEventListener("click", function (e) {
-  var b = e.target.closest("[data-ialim],[data-iatoken],[data-iasaldo],[data-iarel],[data-ialidas],[data-iamodo],[data-iasalvarmodo],[data-iasalvarcfg]");
+  var b = e.target.closest("[data-ialim],[data-iatoken],[data-iasaldo],[data-iarel],[data-ialidas],[data-iamodo],[data-iasalvarmodo],[data-iasalvarcfg],[data-falalancar],[data-faladesfazer]");
   if (!b) return;
   var d = b.dataset;
+  if (d.falalancar !== undefined) return dialogoFalaLancar(d.falalancar);     /* v1.7.0 */
+  if (d.faladesfazer) return dialogoFalaDesfazer(d.faladesfazer);
   if (d.ialim) return dialogoIaLimites(d.ialim);
   if (d.iatoken) return dialogoIaToken(d.iatoken);
   if (d.iasaldo) return dialogoIaSaldo(d.iasaldo);
