@@ -337,6 +337,24 @@ main{padding:4px 28px 28px;max-width:1560px;width:100%;margin:0 auto}
   .foot span:last-child{margin-left:0}
 }
 @media (max-width:460px){.areas{grid-template-columns:minmax(0,1fr)}}
+.bk-top{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.bk-top-ic{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;flex:none;color:#fff;background:var(--grafite)}
+.bk-top b{display:block}.bk-top small{color:var(--ink-2)}
+.bk-top.bk-ok .bk-top-ic{background:#1f8f4e}
+.bk-top.bk-bad .bk-top-ic{background:var(--vermelho)}
+.bk-top.bk-warn .bk-top-ic{background:#B07A00}
+.bk-head,.bk-row{display:grid;grid-template-columns:minmax(0,1.5fr) 160px 150px minmax(0,1.6fr);gap:12px;align-items:center}
+.bk-head{font-size:12px;color:var(--ink-3);padding-bottom:10px;border-bottom:1px solid var(--line);font-weight:500}
+.bk-row{padding:12px 0;border-top:1px solid var(--line)}
+.bk-app b{display:block}.bk-app small{color:var(--ink-3);font-size:12px}
+.bk-quando{color:var(--ink-2)}
+.bk-det{color:var(--ink-2);font-size:13px;min-width:0;overflow-wrap:anywhere}
+.bk-badge{display:inline-block;font-size:12px;font-weight:700;padding:3px 11px;border-radius:999px;white-space:nowrap}
+.bk-ok{color:#1f8f4e;background:color-mix(in srgb,#1f8f4e 15%,transparent)}
+.bk-bad{color:var(--vermelho);background:var(--brand-soft)}
+.bk-none{color:var(--ink-3);background:var(--surface-2)}
+.bk-rodape{color:var(--ink-3);font-size:12.5px;margin:14px 2px 0;line-height:1.5}
+@media (max-width:760px){.bk-head{display:none}.bk-row{grid-template-columns:1fr auto}.bk-quando,.bk-det{grid-column:1/-1}}
 </style>
 <style>
 /* ===== acréscimos do portal real (login, acessos, auditoria) ===== */
@@ -586,8 +604,12 @@ var CFG = {
   }
 };
 
-var VERSAO = "v1.7.0";
+var VERSAO = "v1.8.0";
 var VERSOES = [
+  ["v1.8.0", "24/10/2026",
+   "Nova tela Cópias de segurança (administradores): mostra, por aplicativo, se o backup diário está " +
+   "em dia, quando foi a última cópia, o tamanho do banco e os arquivos. Os dados vêm do servidor de " +
+   "backup (ARTEAPP01), que grava no OneDrive e na pasta de rede do escritório."],
   ["v1.7.0", "11/10/2026",
    "Consumo de IA: cada uso da Azure (recurso artecon-voz, plano gratuito) virou um cartão em Por aplicativo, como os " +
    "demais: Agenda (áudios do WhatsApp, em minutos), Projeto Criança e Estudo da Reforma (voz gerada, em caracteres). " +
@@ -948,6 +970,7 @@ function casca() {
   var itens = [["inicio", "Início", "home"], ["apps", "Aplicativos", "grid"]];
   if (souAdmin()) itens.push(["acessos", "Acessos", "key"], ["auditoria", "Auditoria", "audit"]);
   if (souAdmin() && st.iaAdmin !== false) itens.push(["ia", "Consumo de IA", "spark"]);
+  if (souAdmin()) itens.push(["backups", "Cópias de segurança", "cloud"]);
 
   var h = itens.map(function (i) {
     return '<button class="nav-item" data-ir="' + i[0] + '" title="' + i[1] + '"' +
@@ -1911,6 +1934,94 @@ document.addEventListener("change", function (e) {
     carregarIa();
   }
 });
+
+/* ---------- Cópias de segurança (administrador) — v1.8.0 ---------- */
+function carregarBackups() {
+  sb.schema("core").rpc("backups_resumo", {}).then(function (r) {
+    st.backups = r.error ? { erro: explicar(r.error) } : (r.data || {});
+    if (st.tela === "backups") pintarBackups();
+  }).catch(function (e) {
+    st.backups = { erro: explicar(e) };
+    if (st.tela === "backups") pintarBackups();
+  });
+}
+
+/* O servidor grava a hora de Brasília (naive, lida como UTC no banco); por isso lemos os
+   componentes UTC para exibir a MESMA hora de parede que o servidor registrou, sem conversão. */
+function bkDataHora(iso) {
+  if (!iso) return "—";
+  var d = new Date(iso);
+  if (isNaN(d.getTime())) return "—";
+  var p = function (n) { return String(n).padStart(2, "0"); };
+  return p(d.getUTCDate()) + "/" + p(d.getUTCMonth() + 1) + "/" + d.getUTCFullYear() +
+    " às " + p(d.getUTCHours()) + ":" + p(d.getUTCMinutes());
+}
+function bkMb(v) {
+  v = Number(v) || 0;
+  return (v >= 1024 ? (v / 1024).toFixed(1) + " GB" : v.toFixed(1) + " MB").replace(".", ",");
+}
+function bkBadge(a) {
+  if (a.ativo === false) return '<span class="bk-badge bk-none">Inativo</span>';
+  if (a.ok === null || a.ok === undefined) return '<span class="bk-badge bk-none">Sem cópia ainda</span>';
+  if (a.ok === false) return '<span class="bk-badge bk-bad">Falhou</span>';
+  if ((a.arquivos_falhas || 0) > 0) return '<span class="bk-badge bk-bad">Arquivos com falha</span>';
+  return '<span class="bk-badge bk-ok">Em dia</span>';
+}
+function pintarBackups() {
+  var alvo = $("#painelBackups");
+  if (!alvo) return;
+  var d = st.backups || {};
+  if (d.erro) {
+    alvo.innerHTML = '<section class="panel"><div class="vazio"><b>Não foi possível carregar</b>' + esc(d.erro) + "</div></section>";
+    return;
+  }
+  var apps = d.apps || [];
+  if (!apps.length) {
+    alvo.innerHTML = '<section class="panel"><div class="vazio"><b>Sem dados ainda</b>O relatório aparece depois do primeiro backup.</div></section>';
+    return;
+  }
+  var ur = d.ultima_rodada || {};
+  var ativos = apps.filter(function (a) { return a.ativo !== false; });
+  var falhas = ativos.filter(function (a) { return a.ok === false || (a.arquivos_falhas || 0) > 0; }).length;
+  var semCopia = ativos.filter(function (a) { return a.ok === null || a.ok === undefined; }).length;
+  var saude = falhas ? "bad" : (semCopia ? "warn" : "ok");
+  var titulo = falhas ? (falhas + (falhas === 1 ? " aplicativo precisa de atenção" : " aplicativos precisam de atenção"))
+    : (semCopia ? (semCopia + (semCopia === 1 ? " aplicativo sem cópia ainda" : " aplicativos sem cópia ainda"))
+      : "Todos os aplicativos em dia");
+  var linhas = apps.map(function (a) {
+    var det;
+    if (a.ativo === false) det = "projeto inativo";
+    else if (a.ok === null || a.ok === undefined) det = "aguardando o primeiro backup";
+    else if (a.ok === false) det = a.erro ? esc(a.erro) : "a última cópia falhou";
+    else {
+      var arq = (a.arquivos_novos || 0) + (a.arquivos_iguais || 0);
+      det = "banco " + bkMb(a.banco_mb) + " · " + (a.tabelas || 0) + " tabelas" + (arq ? " · " + arq + (arq === 1 ? " arquivo" : " arquivos") : "");
+      if ((a.arquivos_falhas || 0) > 0) det += " · " + a.arquivos_falhas + " com falha";
+    }
+    return '<div class="bk-row"><div class="bk-app"><b>' + esc(a.nome) + "</b><small>" + esc(a.projeto) + "</small></div>" +
+      "<div>" + bkBadge(a) + "</div>" +
+      '<div class="bk-quando">' + (a.rodada_em ? esc(bkDataHora(a.rodada_em)) : "—") + "</div>" +
+      '<div class="bk-det">' + det + "</div></div>";
+  }).join("");
+  alvo.innerHTML =
+    '<section class="panel bk-top bk-' + saude + '"><div class="bk-top-ic">' + ic(falhas ? "bell" : "shield") + "</div>" +
+    "<div><b>" + esc(titulo) + "</b><small>" +
+    (ur.rodada_em ? "Última rodada em " + esc(bkDataHora(ur.rodada_em)) + " · servidor " + esc(ur.servidor || "—") +
+      " · " + (ur.total_ok || 0) + " ok" + (ur.total_falha ? ", " + ur.total_falha + " com erro" : "") : "Sem rodadas ainda") +
+    "</small></div></section>" +
+    '<section class="panel"><div class="bk-head"><span>Aplicativo</span><span>Situação</span><span>Última cópia</span><span>Detalhe</span></div>' +
+    linhas + "</section>" +
+    '<p class="bk-rodape">Backup diário às 02:45, gravado no OneDrive e na pasta de rede do escritório. ' +
+    "Guarda as 10 cópias mais recentes do banco; os arquivos nunca são apagados. " +
+    "Recuperação: ver o guia COMO-RESTAURAR no servidor de backup.</p>";
+}
+T.backups = function () {
+  if (!souAdmin()) return semPermissao();
+  carregarBackups();
+  return '<div class="page-head"><div><h1>Cópias de segurança</h1>' +
+    "<p>Backup diário do banco e dos arquivos de todos os aplicativos — no OneDrive e na rede do escritório.</p></div></div>" +
+    '<div id="painelBackups"><section class="panel"><div class="carregando"><div class="spin"></div>Carregando…</div></section></div>';
+};
 
 /* ---------- Acessos (administrador) ---------- */
 T.acessos = function () {
