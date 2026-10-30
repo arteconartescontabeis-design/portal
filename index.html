@@ -427,6 +427,14 @@ select.sel{color:var(--ink)}
 .iabar i{display:block;height:100%;border-radius:inherit;background:var(--ciano);transition:width .5s cubic-bezier(.2,.7,.2,1)}
 .iabar.aviso i{background:#D4A800}.iabar.crit i{background:var(--vermelho)}
 .iabar em{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink-3);opacity:.55;border-radius:2px}
+/* v1.9.0: Saldo acabando — todas as IAs */
+.ia-saldos{display:flex;flex-direction:column;gap:14px;margin-top:4px}
+.ia-saldo-top{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.ia-saldo-top small{color:var(--ink-3)}
+.ia-saldo-resta{margin-left:auto;font-weight:700;white-space:nowrap}
+.ia-saldo-sub{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.ia-saldo-sub small{color:var(--ink-3)}
+.ia-saldo-sub .link{margin-left:auto;white-space:nowrap}
 .ia-nota{color:var(--ink-2);font-size:13px;line-height:1.5;margin-top:8px;max-width:72ch}
 .ia-apps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:14px}
 .ia-dica{margin-left:auto;color:var(--ink-3);font-size:13px;text-align:right}
@@ -604,8 +612,14 @@ var CFG = {
   }
 };
 
-var VERSAO = "v1.8.0";
+var VERSAO = "v1.9.0";
 var VERSOES = [
+  ["v1.9.0", "30/10/2026",
+   "Consumo de IA: novo quadro “Saldo acabando — todas as IAs”, logo abaixo do resumo — uma linha por conta " +
+   "(Anthropic, OpenAI e as duas cotas grátis da Azure) com a barra do que resta, o ritmo de gasto por dia e a " +
+   "previsão de quando acaba (“acaba em ~X dias”); a linha fica amarela perto do fim e vermelha abaixo do mínimo. " +
+   "Cada linha traz o seu link Recarregar. O bloco Recarga de créditos ganhou os botões das contas de vídeo do " +
+   "Radar (Cleanvoice e AssemblyAI), cujo consumo e cota de minutos ficam no Radar."],
   ["v1.8.0", "24/10/2026",
    "Nova tela Cópias de segurança (administradores): mostra, por aplicativo, se o backup diário está " +
    "em dia, quando foi a última cópia, o tamanho do banco e os arquivos. Os dados vêm do servidor de " +
@@ -1293,6 +1307,11 @@ var IA_CORES = { atp: "var(--ia-atp)", cct: "var(--ia-cct)", financeiro: "var(--
 /* v1.4.0: duas contas. Os links vêm da IA Central (core.ia_config); estes são o padrão se ela ainda for a v1.0.x. */
 var IA_CONTAS = { anthropic: "Anthropic", openai: "OpenAI" };
 var IA_LINKS = { anthropic: "https://platform.claude.com/settings/billing", openai: "https://platform.openai.com/settings/organization/billing/overview" };
+/* v1.9.0: as contas de vídeo do Radar — o consumo e a cota de minutos ficam no Radar; aqui só o atalho da recarga */
+var IA_VIDEO_LINKS = [
+  ["Cleanvoice", "vídeo do Radar · vícios de fala, pausas e som", "https://app.cleanvoice.ai"],
+  ["AssemblyAI", "vídeo do Radar · legenda em português", "https://www.assemblyai.com/app"]
+];
 function iaLink(d, conta) {
   var u = String((d && d.links && d.links[conta]) || IA_LINKS[conta] || "");
   return /^https:\/\/[!-~]+$/.test(u) && !/["'<>`]/.test(u) ? u : IA_LINKS[conta];
@@ -1379,6 +1398,7 @@ function carregarIaFala() {
     st.iaFala = r.error ? null : r.data;
     var c = $("#falaCards"); if (c) c.innerHTML = st.iaFala ? cartoesFala(st.iaFala, st.iaMes) : "";
     var el = $("#painelFala"); if (el) el.innerHTML = st.iaFala ? painelFala(st.iaFala, st.iaMes) : "";
+    var g = $("#iaSaldoAcabando"); if (g && st.ia && st.ia.mes === st.iaMes) g.outerHTML = blocoSaldoAcabando(st.ia);   /* v1.9.0 */
   }, function () { st.iaFala = null; });
 }
 function minTexto(seg) {
@@ -1525,6 +1545,77 @@ function nivelUso(gasto, limite, alerta) {
   return p >= 100 ? "crit" : p >= alerta ? "aviso" : "";
 }
 
+/* ---------- v1.9.0: Saldo acabando — todas as IAs (o decremento de cada conta e de cada cota) ---------- */
+function projecaoSaldo(sd, minimo) {
+  if (!sd || sd.estimado === null || sd.estimado === undefined || !sd.informado_em) return null;
+  var base = (+sd.informado_usd || 0) + (+sd.recargas_depois || 0);
+  var resta = Math.max(0, +sd.estimado), gasto = Math.max(0, base - +sd.estimado);
+  var dias = Math.max(0.25, (Date.now() - new Date(sd.informado_em).getTime()) / 86400000);
+  var ritmo = gasto / dias;                                  /* US$ por dia desde o último acerto do saldo */
+  var acabaEm = ritmo > 0.0001 ? resta / ritmo : null;
+  var pct = base > 0 ? Math.min(100, Math.max(0, resta / base * 100)) : null;
+  var nv = minimo !== undefined && minimo !== null && +sd.estimado < +minimo ? "crit"
+         : acabaEm !== null && acabaEm <= 5 ? "crit"
+         : (acabaEm !== null && acabaEm <= 14) || (pct !== null && pct <= 25) ? "aviso" : "";
+  return { resta: resta, pct: pct, nv: nv, ritmo: ritmo, acabaEm: acabaEm };
+}
+function diasTexto(dd) {
+  if (dd === null) return "";
+  if (dd < 1) return "no ritmo atual, acaba em menos de 1 dia";
+  if (dd > 365) return "no ritmo atual, dura mais de um ano";
+  var n = Math.round(dd);
+  return "no ritmo atual, acaba em ~" + n + (n === 1 ? " dia" : " dias");
+}
+function linhaSaldoIa(nome, detalhe, restaTxt, pct, nv, nota, link, rotulo) {
+  return '<div class="ia-saldo-linha">' +
+    '<div class="ia-saldo-top"><b>' + esc(nome) + "</b><small>" + esc(detalhe) + "</small>" +
+    '<span class="ia-saldo-resta' + (nv === "crit" ? " warn-t" : "") + '">' + esc(restaTxt) + "</span></div>" +
+    (pct === null ? "" : '<div class="iabar' + (nv ? " " + nv : "") + '" role="img" aria-label="resta ' + Math.round(pct) +
+      '% do que entrou"><i style="width:' + pct.toFixed(1) + '%"></i></div>') +
+    '<div class="ia-saldo-sub"><small>' + esc(nota) + "</small>" +
+    (link ? '<a class="link" href="' + esc(link) + '" target="_blank" rel="noopener noreferrer">' + esc(rotulo || "Recarregar ↗") + "</a>" : "") +
+    "</div></div>";
+}
+function blocoSaldoAcabando(d) {
+  var c = d.config || {}, linhas = [];
+  function contaUsd(conta, sd, minimo, detalhe) {
+    var p = projecaoSaldo(sd, minimo);
+    if (!p) { linhas.push(linhaSaldoIa(IA_CONTAS[conta], detalhe, "—", null, "",
+      "lance o saldo da conta (Corrigir o saldo) para a barra aparecer aqui", iaLink(d, conta))); return; }
+    linhas.push(linhaSaldoIa(IA_CONTAS[conta], detalhe, usd(p.resta) + " restantes", p.pct, p.nv,
+      "gasto de " + usdFino(p.ritmo) + " por dia desde o último acerto do saldo" +
+      (p.acabaEm !== null ? " · " + diasTexto(p.acabaEm) : "") +
+      (+sd.estimado < +minimo ? " · abaixo do mínimo de " + usd(minimo) : ""),
+      iaLink(d, conta)));
+  }
+  contaUsd("anthropic", d.saldo || {}, c.saldo_minimo_usd, "texto · conta paga");
+  if (iaTemOpenai(d)) contaUsd("openai", d.saldo_openai || {}, c.saldo_minimo_openai_usd, "imagens · conta paga");
+  var f = st.iaFala && st.iaFala.mes === d.mes ? st.iaFala : null;
+  if (f) {
+    var ehMesAtual = d.mes === mesesRecentes(1)[0].id, diaN = Math.max(1, new Date().getDate());
+    var cota = function (nome, usado, total, fmt) {
+      var resta = Math.max(0, total - usado), pct = total > 0 ? Math.min(100, Math.max(0, resta / total * 100)) : null;
+      var ritmo = ehMesAtual ? usado / diaN : 0, acabaEm = ehMesAtual && ritmo > 0 ? resta / ritmo : null;
+      var nv = (pct !== null && pct <= 10) || (acabaEm !== null && acabaEm <= 5) ? "crit"
+             : (pct !== null && pct <= 25) || (acabaEm !== null && acabaEm <= 14) ? "aviso" : "";
+      linhas.push(linhaSaldoIa(nome, "cota grátis da Azure", fmt(resta) + " restantes", pct, nv,
+        (ehMesAtual ? "uso de " + fmt(ritmo) + " por dia no mês" + (acabaEm !== null ? " · " + diasTexto(acabaEm) : "") + " · " : "") +
+        "a cota renova no dia 1º (sem recarga)", null));
+    };
+    cota("Azure — transcrição", +f.total_seg || 0, +f.franquia_seg || 18000, minTexto);
+    cota("Azure — voz", +f.total_caracteres || 0, +f.franquia_caracteres || 500000, carTexto);
+  }
+  IA_VIDEO_LINKS.forEach(function (v) {
+    linhas.push(linhaSaldoIa(v[0], v[1], "no Radar", null, "",
+      "o consumo e a cota de minutos ficam no Radar (não entram no saldo daqui)", v[2]));
+  });
+  return '<section class="panel" id="iaSaldoAcabando"><div class="panel-head"><h2>' + ic("chart") + "Saldo acabando — todas as IAs</h2>" +
+    '<span class="ia-dica">A barra é o que resta; o ritmo vem do gasto real</span></div>' +
+    '<div class="ia-saldos">' + linhas.join("") + "</div>" +
+    '<p class="ia-nota">Anthropic e OpenAI: o que resta do que entrou desde o último acerto do saldo (saldo informado + recargas). ' +
+    "Azure: o que resta da cota grátis do mês. Amarelo = perto do fim; vermelho = abaixo do mínimo ou acabando em poucos dias.</p></section>";
+}
+
 function painelIa(d) {
   var c = d.config || {}, s = d.saldo || {}, apps = d.apps || [], rec = d.recarga || { modo: "manual" };
   var alerta = +c.alerta_pct || 80, limTot = +c.limite_total_mensal_usd || 0;
@@ -1558,6 +1649,9 @@ function painelIa(d) {
     '<i style="width:' + pctTot.toFixed(1) + '%"></i><em style="left:' + alerta + '%" title="aviso em ' + alerta + '%"></em></div>' +
     '<p class="ia-nota">' + Math.round(pctTot) + "% do limite total do mês. Aviso ao chegar em " + alerta +
     "%; em 100% todos os aplicativos param até o mês virar ou o limite ser aumentado.</p></section>";
+
+  /* ---- v1.9.0: saldo acabando — todas as IAs (o gráfico de decremento, com o link de recarga em cada linha) ---- */
+  h += blocoSaldoAcabando(d);
 
   /* ---- por aplicativo ---- */
   h += '<section class="panel"><div class="panel-head"><h2>' + ic("grid") + "Por aplicativo</h2>" +
@@ -1691,7 +1785,9 @@ function blocoRecarga(d, rec, c) {
     '<span class="ia-dica">Recarga feita na página de cada conta</span></div>' +
     '<div class="ia-contas">' +
     '<a class="btn sm" href="' + esc(iaLink(d, "anthropic")) + '" target="_blank" rel="noopener noreferrer">Recarregar Anthropic ↗</a>' +
-    (iaTemOpenai(d) ? '<a class="btn sm" href="' + esc(iaLink(d, "openai")) + '" target="_blank" rel="noopener noreferrer">Recarregar OpenAI ↗</a>' : "") + "</div>" +
+    (iaTemOpenai(d) ? '<a class="btn sm" href="' + esc(iaLink(d, "openai")) + '" target="_blank" rel="noopener noreferrer">Recarregar OpenAI ↗</a>' : "") +
+    IA_VIDEO_LINKS.map(function (v) { return '<a class="btn sm" href="' + esc(v[2]) + '" target="_blank" rel="noopener noreferrer">Recarregar ' + esc(v[0]) + ' ↗</a>'; }).join("") + "</div>" +
+    '<p class="ia-nota">Cleanvoice e AssemblyAI são as contas de vídeo do Radar: o consumo e a cota de minutos ficam no Radar; aqui fica o atalho da recarga.</p>' +
     '<div class="seg ia-seg" role="radiogroup" aria-label="Modo de recarga">' +
     '<button data-iamodo="manual" aria-pressed="' + !auto + '">Manual</button>' +
     '<button data-iamodo="automatica" aria-pressed="' + auto + '">Automática</button></div>' +
