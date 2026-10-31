@@ -435,6 +435,12 @@ select.sel{color:var(--ink)}
 .ia-saldo-sub{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
 .ia-saldo-sub small{color:var(--ink-3)}
 .ia-saldo-sub .link{margin-left:auto;white-space:nowrap}
+/* v1.11.0: percentuais à vista e gráficos interativos */
+.ia-saldo-pctnum{font-style:normal;color:var(--ink-3);font-weight:600}
+.legend [data-ialegenda]{cursor:pointer;user-select:none;border-radius:6px;padding:2px 6px}
+.legend [data-ialegenda]:hover{background:var(--surface-2)}
+.legend .leg-off{opacity:.38;text-decoration:line-through}
+.chart .dia-cx:hover{fill:rgba(15,23,42,.08)}
 .ia-nota{color:var(--ink-2);font-size:13px;line-height:1.5;margin-top:8px;max-width:72ch}
 .ia-apps{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:14px}
 .ia-dica{margin-left:auto;color:var(--ink-3);font-size:13px;text-align:right}
@@ -612,8 +618,13 @@ var CFG = {
   }
 };
 
-var VERSAO = "v1.10.0";
+var VERSAO = "v1.11.0";
 var VERSOES = [
+  ["v1.11.0", "31/10/2026",
+   "Consumo de IA com os gráficos interativos e o percentual à vista: toda barra (Saldo acabando, limite total, " +
+   "Por aplicativo e cotas da Azure) mostra o percentual de quanto resta ou de quanto já foi usado, com a dica no " +
+   "toque; no Gasto por dia, a legenda virou botão — toque num aplicativo para escondê-lo ou mostrá-lo no gráfico " +
+   "(a escala se ajusta sozinha) — e o dia sob o dedo fica realçado, com os valores na dica."],
   ["v1.10.0", "31/10/2026",
    "Consumo de IA com as IAs de vídeo do Radar DENTRO da central: a cada polimento, o Radar avisa a IA Central " +
    "(ia_central_v1.2.0 + função ia-uso-externo) e o gasto da Cleanvoice e da AssemblyAI passa a aparecer aqui — no " +
@@ -1430,8 +1441,8 @@ function cartoesFala(f, mes) {
       '<div class="ia-app-nome"><b>' + esc(a.nome) + "</b><small>" +
         esc(a.descricao || (voz ? "voz da Azure (texto → fala)" : "transcrição da Azure (fala → texto)")) + "</small></div>" +
       '<span class="tag ok">grátis</span></div>' +
-      '<div class="ia-app-num"><b>' + (voz ? carTexto(usado) : minTexto(usado)) + "</b><span>de " + (voz ? "500 mil" : "300 min") + " no mês</span></div>" +
-      '<div class="iabar' + (nv ? " " + nv : "") + '"><i style="width:' + pct.toFixed(1) + '%"></i><em style="left:80%"></em></div>' +
+      '<div class="ia-app-num"><b>' + (voz ? carTexto(usado) : minTexto(usado)) + "</b><span>de " + (voz ? "500 mil" : "300 min") + ' no mês · <em class="ia-saldo-pctnum">' + Math.round(pct) + "%</em></span></div>" +
+      '<div class="iabar' + (nv ? " " + nv : "") + '" title="usado ' + Math.round(pct) + '% da cota grátis · faltam ' + Math.max(0, Math.round(100 - pct)) + '%"><i style="width:' + pct.toFixed(1) + '%"></i><em style="left:80%"></em></div>' +
       '<dl class="ia-dl">' +
       "<div><dt>Hoje</dt><dd>" + (ehMesAtual ? falaQtd(a, "hoje") : "—") + "</dd></div>" +
       "<div><dt>" + (voz ? "Lançamentos no mês" : "Áudios no mês") + "</dt><dd>" + num(a.audios_mes) + "</dd></div>" +
@@ -1576,9 +1587,10 @@ function diasTexto(dd) {
 function linhaSaldoIa(nome, detalhe, restaTxt, pct, nv, nota, link, rotulo) {
   return '<div class="ia-saldo-linha">' +
     '<div class="ia-saldo-top"><b>' + esc(nome) + "</b><small>" + esc(detalhe) + "</small>" +
-    '<span class="ia-saldo-resta' + (nv === "crit" ? " warn-t" : "") + '">' + esc(restaTxt) + "</span></div>" +
+    '<span class="ia-saldo-resta' + (nv === "crit" ? " warn-t" : "") + '">' + esc(restaTxt) +
+      (pct === null ? "" : ' <em class="ia-saldo-pctnum">· resta ' + Math.round(pct) + "%</em>") + "</span></div>" +
     (pct === null ? "" : '<div class="iabar' + (nv ? " " + nv : "") + '" role="img" aria-label="resta ' + Math.round(pct) +
-      '% do que entrou"><i style="width:' + pct.toFixed(1) + '%"></i></div>') +
+      '% do que entrou" title="resta ' + Math.round(pct) + '% · usado ' + Math.round(100 - pct) + '%"><i style="width:' + pct.toFixed(1) + '%"></i></div>') +
     '<div class="ia-saldo-sub"><small>' + esc(nota) + "</small>" +
     (link ? '<a class="link" href="' + esc(link) + '" target="_blank" rel="noopener noreferrer">' + esc(rotulo || "Recarregar ↗") + "</a>" : "") +
     "</div></div>";
@@ -1668,9 +1680,10 @@ function painelIa(d) {
     (iaTemOpenai(d) ? kpiSaldo("openai", so, abaixoO, minO) : "") +
     '<div class="kpi"><span>Mês anterior</span><b>' + usd(d.total_mes_anterior) + '</b><small class="mute">para comparar</small></div>' +
     "</div>" +
-    '<div class="iabar big' + (nvTot ? " " + nvTot : "") + '" role="img" aria-label="' + Math.round(pctTot) + '% do limite total do mês">' +
+    '<div class="iabar big' + (nvTot ? " " + nvTot : "") + '" role="img" aria-label="' + Math.round(pctTot) + '% do limite total do mês" title="usado ' +
+      Math.round(pctTot) + '% · faltam ' + Math.max(0, Math.round(100 - pctTot)) + '%">' +
     '<i style="width:' + pctTot.toFixed(1) + '%"></i><em style="left:' + alerta + '%" title="aviso em ' + alerta + '%"></em></div>' +
-    '<p class="ia-nota">' + Math.round(pctTot) + "% do limite total do mês. Aviso ao chegar em " + alerta +
+    '<p class="ia-nota">' + Math.round(pctTot) + "% do limite total do mês usado (faltam " + Math.max(0, Math.round(100 - pctTot)) + "%). Aviso ao chegar em " + alerta +
     "%; em 100% todos os aplicativos param até o mês virar ou o limite ser aumentado.</p></section>";
 
   /* ---- v1.9.0: saldo acabando — todas as IAs (o gráfico de decremento, com o link de recarga em cada linha) ---- */
@@ -1689,8 +1702,8 @@ function painelIa(d) {
         '<div class="ia-app-top"><i class="dot" style="background:' + iaCor(a.app, i) + '"></i>' +
         '<div class="ia-app-nome"><b>' + esc(a.nome) + "</b><small>" + esc((a.modelos || []).join(", ")) + "</small></div>" +
         (a.ativo ? '<span class="tag ok">ligado</span>' : '<span class="tag no">desligado</span>') + "</div>" +
-        '<div class="ia-app-num"><b>' + usd(gm) + "</b><span>de " + usd(lm) + " no mês</span></div>" +
-        '<div class="iabar' + (nv ? " " + nv : "") + '"><i style="width:' + pm.toFixed(1) + '%"></i><em style="left:' + alerta + '%"></em></div>' +
+        '<div class="ia-app-num"><b>' + usd(gm) + "</b><span>de " + usd(lm) + " no mês" + (lm ? ' · <em class="ia-saldo-pctnum">' + Math.round(pm) + "%</em>" : "") + "</span></div>" +
+        '<div class="iabar' + (nv ? " " + nv : "") + '" title="usado ' + Math.round(pm) + '% do limite mensal · faltam ' + Math.max(0, Math.round(100 - pm)) + '%"><i style="width:' + pm.toFixed(1) + '%"></i><em style="left:' + alerta + '%"></em></div>' +
         '<dl class="ia-dl">' +
         "<div><dt>Hoje</dt><dd>" + usd(gh) + (ld === null ? " · sem limite diário" : " de " + usd(ld)) + "</dd></div>" +
         "<div><dt>Chamadas no mês</dt><dd>" + num(a.chamadas_mes) + (recusadas ? ' · <span class="warn-t">' + num(recusadas) + (recusadas === 1 ? " recusada" : " recusadas") + "</span>" : "") + "</dd></div>" +
@@ -1709,11 +1722,8 @@ function painelIa(d) {
   /* ---- v1.6.0 / v1.7.0: Azure — as duas cotas e os lançamentos (preenchido por carregarIaFala) ---- */
   h += '<div id="painelFala">' + (st.iaFala && st.iaFala.mes === d.mes ? painelFala(st.iaFala, d.mes) : "") + "</div>";
 
-  /* ---- gráfico diário ---- */
-  h += '<section class="panel"><div class="panel-head"><h2>' + ic("cal") + "Gasto por dia</h2>" +
-    '<div class="legend">' + apps.map(function (a, i) {
-      return '<span><i style="background:' + iaCor(a.app, i) + '"></i>' + esc(a.nome.split(" — ")[0]) + "</span>";
-    }).join("") + "</div></div>" + graficoDiario(d, apps) + "</section>";
+  /* ---- gráfico diário (v1.11.0: legenda clicável; o bloco se redesenha sozinho ao esconder/mostrar) ---- */
+  h += blocoGastoDia(d, apps);
 
   /* ---- avisos + últimas chamadas ---- */
   var notifs = d.notificacoes || [];
@@ -1738,11 +1748,25 @@ function painelIa(d) {
   return h;
 }
 
+/* v1.11.0: o quadro do gasto por dia — a legenda é clicável (esconde/mostra cada aplicativo) e a escala se ajusta */
+function blocoGastoDia(d, apps) {
+  st.iaOcultos = st.iaOcultos || {};
+  return '<section class="panel" id="iaGasto"><div class="panel-head"><h2>' + ic("cal") + "Gasto por dia</h2>" +
+    '<div class="legend">' + apps.map(function (a, i) {
+      var off = !!st.iaOcultos[a.app];
+      return '<span data-ialegenda="' + esc(a.app) + '" class="' + (off ? "leg-off" : "") + '" role="button" tabindex="0"' +
+        ' title="' + (off ? "clique para mostrar no gráfico" : "clique para esconder do gráfico") + '">' +
+        '<i style="background:' + iaCor(a.app, i) + '"></i>' + esc(a.nome.split(" — ")[0]) + "</span>";
+    }).join("") + "</div></div>" + graficoDiario(d, apps) + "</section>";
+}
+
 function graficoDiario(d, apps) {
   var partes = d.mes.split("-"), ano = +partes[0], mes = +partes[1];
   var dias = new Date(ano, mes, 0).getDate();
+  var ocultos = st.iaOcultos || {};
   var porDia = {}, max = 0;
   (d.diario || []).forEach(function (x) {
+    if (ocultos[x.app]) return;                                   /* v1.11.0: escondido pela legenda */
     var dia = +String(x.dia).slice(8, 10);
     porDia[dia] = porDia[dia] || {};
     porDia[dia][x.app] = (porDia[dia][x.app] || 0) + (+x.custo || 0);
@@ -1751,7 +1775,9 @@ function graficoDiario(d, apps) {
     var t = 0; Object.keys(porDia[k]).forEach(function (a) { t += porDia[k][a]; });
     if (t > max) max = t;
   });
-  if (!max) return '<div class="vazio"><b>Nenhum gasto neste mês</b>As barras aparecem conforme os aplicativos usam a IA.</div>';
+  if (!max) return '<div class="vazio"><b>' + (Object.keys(ocultos).some(function (k) { return ocultos[k]; })
+    ? "Nada a mostrar com esta seleção</b>Toque nos nomes da legenda para trazer os aplicativos de volta ao gráfico."
+    : "Nenhum gasto neste mês</b>As barras aparecem conforme os aplicativos usam a IA.") + "</div>";
 
   /* escala "redonda" em dólares */
   var passos = [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100];
@@ -1768,6 +1794,7 @@ function graficoDiario(d, apps) {
   for (var dia = 1; dia <= dias; dia++) {
     var x = L + (dia - 1) * bw, base = T0 + ph, info = porDia[dia] || {}, tit = [];
     apps.forEach(function (a, i) {
+      if (ocultos[a.app]) return;
       var v = info[a.app] || 0; if (!v) return;
       var hgt = Math.max(1.5, v / topo * ph);
       base -= hgt;
@@ -1775,7 +1802,7 @@ function graficoDiario(d, apps) {
         '" height="' + hgt.toFixed(1) + '" rx="2" fill="' + iaCor(a.app, i) + '"/>';
       tit.push(a.nome.split(" — ")[0] + ": " + usdFino(v));
     });
-    if (tit.length) svg += '<rect x="' + x.toFixed(1) + '" y="' + T0 + '" width="' + bw.toFixed(1) + '" height="' + ph + '" fill="transparent"><title>Dia ' + dia + "\n" + tit.join("\n") + "</title></rect>";
+    if (tit.length) svg += '<rect class="dia-cx" x="' + x.toFixed(1) + '" y="' + T0 + '" width="' + bw.toFixed(1) + '" height="' + ph + '" fill="transparent"><title>Dia ' + dia + "\n" + tit.join("\n") + "\nTotal: " + usdFino(Object.keys(info).reduce(function (s, k) { return s + (ocultos[k] ? 0 : info[k]); }, 0)) + "</title></rect>";
     if (dia === 1 || dia % 5 === 0) svg += '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (H - 8) + '" text-anchor="middle">' + dia + "</text>";
   }
   return '<div style="overflow-x:auto">' + svg + "</svg></div>";
@@ -2029,9 +2056,16 @@ function salvarCfgIa(btn) {
 }
 
 document.addEventListener("click", function (e) {
-  var b = e.target.closest("[data-ialim],[data-iatoken],[data-iasaldo],[data-iarel],[data-ialidas],[data-iamodo],[data-iasalvarmodo],[data-iasalvarcfg],[data-falalancar],[data-faladesfazer]");
+  var b = e.target.closest("[data-ialim],[data-iatoken],[data-iasaldo],[data-iarel],[data-ialidas],[data-iamodo],[data-iasalvarmodo],[data-iasalvarcfg],[data-falalancar],[data-faladesfazer],[data-ialegenda]");
   if (!b) return;
   var d = b.dataset;
+  if (d.ialegenda !== undefined) {                               /* v1.11.0: esconde/mostra o aplicativo no Gasto por dia */
+    st.iaOcultos = st.iaOcultos || {};
+    st.iaOcultos[d.ialegenda] = !st.iaOcultos[d.ialegenda];
+    var g = document.getElementById("iaGasto");
+    if (g && st.ia) g.outerHTML = blocoGastoDia(st.ia, st.ia.apps || []);
+    return;
+  }
   if (d.falalancar !== undefined) return dialogoFalaLancar(d.falalancar);     /* v1.7.0 */
   if (d.faladesfazer) return dialogoFalaDesfazer(d.faladesfazer);
   if (d.ialim) return dialogoIaLimites(d.ialim);
