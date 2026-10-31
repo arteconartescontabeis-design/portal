@@ -612,8 +612,15 @@ var CFG = {
   }
 };
 
-var VERSAO = "v1.9.0";
+var VERSAO = "v1.10.0";
 var VERSOES = [
+  ["v1.10.0", "31/10/2026",
+   "Consumo de IA com as IAs de vídeo do Radar DENTRO da central: a cada polimento, o Radar avisa a IA Central " +
+   "(ia_central_v1.2.0 + função ia-uso-externo) e o gasto da Cleanvoice e da AssemblyAI passa a aparecer aqui — no " +
+   "quadro Saldo acabando (a Cleanvoice, pré-paga, ganha barra e previsão como a Anthropic, com o saldo lançado em " +
+   "Corrigir o saldo; a AssemblyAI, pós-paga, mostra o gasto do mês), nas Últimas chamadas (como “vídeo”) e no gasto " +
+   "do aplicativo Radar. Lançar recarga e Corrigir o saldo agora aceitam a conta Cleanvoice. Os avisos de limite " +
+   "(80% e 100%) passam a chegar com o link da recarga, na tela e no e-mail."],
   ["v1.9.0", "30/10/2026",
    "Consumo de IA: novo quadro “Saldo acabando — todas as IAs”, logo abaixo do resumo — uma linha por conta " +
    "(Anthropic, OpenAI e as duas cotas grátis da Azure) com a barra do que resta, o ritmo de gasto por dia e a " +
@@ -1305,7 +1312,7 @@ T.versoes = function () {
 /* ---------- Consumo de IA (administrador da IA Central) — v1.3.0 ---------- */
 var IA_CORES = { atp: "var(--ia-atp)", cct: "var(--ia-cct)", financeiro: "var(--ia-fin)", ncm: "var(--ia-ncm)", radar: "var(--ia-radar)" };
 /* v1.4.0: duas contas. Os links vêm da IA Central (core.ia_config); estes são o padrão se ela ainda for a v1.0.x. */
-var IA_CONTAS = { anthropic: "Anthropic", openai: "OpenAI" };
+var IA_CONTAS = { anthropic: "Anthropic", openai: "OpenAI", cleanvoice: "Cleanvoice", assemblyai: "AssemblyAI" };   /* v1.10.0: as IAs de vídeo do Radar */
 var IA_LINKS = { anthropic: "https://platform.claude.com/settings/billing", openai: "https://platform.openai.com/settings/organization/billing/overview" };
 /* v1.9.0: as contas de vídeo do Radar — o consumo e a cota de minutos ficam no Radar; aqui só o atalho da recarga */
 var IA_VIDEO_LINKS = [
@@ -1605,10 +1612,26 @@ function blocoSaldoAcabando(d) {
     cota("Azure — transcrição", +f.total_seg || 0, +f.franquia_seg || 18000, minTexto);
     cota("Azure — voz", +f.total_caracteres || 0, +f.franquia_caracteres || 500000, carTexto);
   }
-  IA_VIDEO_LINKS.forEach(function (v) {
-    linhas.push(linhaSaldoIa(v[0], v[1], "no Radar", null, "",
-      "o consumo e a cota de minutos ficam no Radar (não entram no saldo daqui)", v[2]));
-  });
+  /* v1.10.0: as IAs de vídeo entram pela central (ia_registrar_externo): a Cleanvoice (pré-paga) ganha barra e
+     previsão como a Anthropic; a AssemblyAI (pós-paga) mostra o gasto do mês. Sem a IA Central v1.2.0, o painel
+     não manda por_provedor dos dois e as linhas voltam ao atalho simples da recarga. */
+  var pp = d.por_provedor || {};
+  if (pp.cleanvoice !== undefined) {
+    var pc = projecaoSaldo(d.saldo_cleanvoice || {});
+    if (pc) linhas.push(linhaSaldoIa("Cleanvoice", "vídeo do Radar · pré-paga", usd(pc.resta) + " restantes", pc.pct, pc.nv,
+      "gasto de " + usdFino(pc.ritmo) + " por dia desde o último acerto do saldo" + (pc.acabaEm !== null ? " · " + diasTexto(pc.acabaEm) : ""),
+      IA_VIDEO_LINKS[0][2]));
+    else linhas.push(linhaSaldoIa("Cleanvoice", "vídeo do Radar · pré-paga", usd(pp.cleanvoice) + " no mês", null, "",
+      "medido pela central a cada polimento · lance o saldo da conta (Corrigir o saldo → Cleanvoice) para a barra aparecer",
+      IA_VIDEO_LINKS[0][2]));
+    linhas.push(linhaSaldoIa("AssemblyAI", "vídeo do Radar · pós-paga", usd(pp.assemblyai) + " no mês", null, "",
+      "medido pela central a cada polimento · a cobrança vem na fatura da conta", IA_VIDEO_LINKS[1][2]));
+  } else {
+    IA_VIDEO_LINKS.forEach(function (v) {
+      linhas.push(linhaSaldoIa(v[0], v[1], "no Radar", null, "",
+        "o consumo e a cota de minutos ficam no Radar (não entram no saldo daqui)", v[2]));
+    });
+  }
   return '<section class="panel" id="iaSaldoAcabando"><div class="panel-head"><h2>' + ic("chart") + "Saldo acabando — todas as IAs</h2>" +
     '<span class="ia-dica">A barra é o que resta; o ritmo vem do gasto real</span></div>' +
     '<div class="ia-saldos">' + linhas.join("") + "</div>" +
@@ -1773,7 +1796,9 @@ function tabelaUltimas(lista, apps) {
       var r = rot[u.status] || [u.status, ""];
       return "<tr><td>" + esc(dataHora(u.em)) + "</td><td>" + esc(nomes[u.app] || u.app) + "</td>" +
         '<td style="color:var(--ink-2)">' + esc(u.usuario || "—") + "</td>" +
-        "<td>" + (+u.imagens ? num(u.imagens) + (+u.imagens === 1 ? " imagem" : " imagens") : num(u.entrada) + " / " + num(u.saida)) + "</td><td>" + usdFino(u.custo_usd) + "</td>" +
+        "<td>" + (+u.imagens ? num(u.imagens) + (+u.imagens === 1 ? " imagem" : " imagens")
+          : u.provedor === "cleanvoice" || u.provedor === "assemblyai" ? "vídeo"               /* v1.10.0 */
+          : num(u.entrada) + " / " + num(u.saida)) + "</td><td>" + usdFino(u.custo_usd) + "</td>" +
         '<td><span class="tag ' + r[1] + '"' + (u.detalhe ? ' title="' + esc(u.detalhe) + '"' : "") + ">" + esc(r[0]) + "</span></td></tr>";
     }).join("") + "</tbody></table></div>";
 }
@@ -1908,7 +1933,7 @@ function dialogoIaSaldo(tipo) {
       ? "<p>Informe o valor que você comprou na página da conta. Ele soma ao saldo estimado dela.</p>"
       : "<p>Informe o saldo exato que a página da conta mostra agora. Ele passa a ser o novo ponto de partida da estimativa.</p>") +
     (iaTemOpenai(st.ia)
-      ? '<div class="f"><label for="sConta">Conta</label><select class="sel" id="sConta"><option value="">— escolher a conta —</option><option value="anthropic">Anthropic (texto)</option><option value="openai">OpenAI (imagens)</option></select></div>' : "") +
+      ? '<div class="f"><label for="sConta">Conta</label><select class="sel" id="sConta"><option value="">— escolher a conta —</option><option value="anthropic">Anthropic (texto)</option><option value="openai">OpenAI (imagens)</option><option value="cleanvoice">Cleanvoice (vídeo do Radar)</option></select></div>' : "") +
     '<div class="f"><label for="sVal">' + (recarga ? "Valor da recarga (US$)" : "Saldo atual da conta (US$)") + '</label><input id="sVal" type="number" min="0" step="0.01"></div>' +
     '<div class="f"><label for="sObs">Observação (opcional)</label><input id="sObs" type="text" placeholder="' + (recarga ? "recibo de " + hojeCurto() : "conferido na conta em " + hojeCurto()) + '"></div>' +
     '<div class="dlg-acoes"><button class="btn" data-fechar>Cancelar</button><button class="btn primary" id="sOkIa">' + (recarga ? "Lançar recarga" : "Corrigir o saldo") + "</button></div>",
@@ -1918,7 +1943,7 @@ function dialogoIaSaldo(tipo) {
         var v = numCampo("sVal");
         if (v === null || v < 0 || (recarga && v === 0)) { toast("Informe um valor válido."); return; }
         var obs = $("#sObs").value.trim() || $("#sObs").placeholder;
-        if ($("#sConta") && !$("#sConta").value) { toast("Escolha a conta: Anthropic ou OpenAI."); return; }
+        if ($("#sConta") && !$("#sConta").value) { toast("Escolha a conta: Anthropic, OpenAI ou Cleanvoice."); return; }
         var conta = ($("#sConta") || {}).value || "anthropic";
         var args = { p_tipo: tipo, p_valor: v, p_obs: obs };
         if ($("#sConta")) args.p_provedor = conta;            /* só existe na IA Central v1.1.0 */
