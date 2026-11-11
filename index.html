@@ -386,6 +386,16 @@ table.tb td{padding:11px 12px;border-top:1px solid var(--line);font-size:14px;ve
 table.tb tr:hover td{background:var(--surface-2)}
 .tag{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;padding:3px 9px;border-radius:6px;background:var(--surface-2);color:var(--ink-2);white-space:nowrap}
 .tag.ok{background:var(--info-soft);color:var(--link)}
+/* v1.12.0 — tela Segurança */
+.seg-row{display:grid;grid-template-columns:92px minmax(0,2fr) 80px 170px;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.seg-row small{display:block;color:var(--ink-2);margin-top:2px}
+.seg-row select{padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:inherit;font:inherit;max-width:170px}
+.seg-cat{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding:3px 8px;border-radius:6px;background:var(--surface-2);color:var(--ink-2);text-align:center}
+.seg-cat.urgente{background:#fdecea;color:#b03a2e}.seg-cat.alto{background:#fef5e7;color:#b9770e}
+.seg-proj{display:grid;grid-template-columns:minmax(0,1.4fr) repeat(4,minmax(64px,auto));gap:10px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.seg-num{text-align:center}.seg-num b{display:block;font-size:20px}.seg-num span{font-size:11px;color:var(--ink-2)}
+.seg-flag{font-size:12px;color:var(--ink-2);margin:3px 0 0;line-height:1.5}
+@media (max-width:760px){.seg-row{grid-template-columns:1fr}.seg-proj{grid-template-columns:1fr 1fr}}
 .tag.no{background:var(--brand-soft);color:var(--brand-ink)}
 .tag.adm{background:var(--warn-soft);color:var(--warn-ink)}
 .acoes{display:flex;gap:6px;flex-wrap:nowrap;justify-content:flex-end}
@@ -615,11 +625,24 @@ var CFG = {
     cobranca: "https://yeujqjtjqtegsnzwwazb.supabase.co/functions/v1/portal-provisionar",
     /* v1.5.0: Agenda Pro (projeto compartilhado com o Financeiro Pro: o login é o mesmo nos dois) */
     agenda: "https://vuwgxndahrzinfdlapxz.supabase.co/functions/v1/portal-provisionar"
+  },
+  /* v1.12.0: tela Segurança — a função portal-seguranca de cada projeto devolve o retrato das contas */
+  seguranca: {
+    "Departamento Pessoal": "https://fbxelwhdiisfmnwrerbl.supabase.co/functions/v1/portal-seguranca",
+    "Gestão Empresarial e Financeiro": "https://vuwgxndahrzinfdlapxz.supabase.co/functions/v1/portal-seguranca",
+    "Contábil": "https://yeujqjtjqtegsnzwwazb.supabase.co/functions/v1/portal-seguranca",
+    "Tributário e Fiscal": "https://kmdrqkiyhdmdtufrogke.supabase.co/functions/v1/portal-seguranca"
   }
 };
 
-var VERSAO = "v1.11.0";
+var VERSAO = "v1.12.0";
 var VERSOES = [
+  ["v1.12.0", "11/11/2026",
+   "Nova tela Segurança (só administrador): o checklist vivo do chamado de segurança de novembro — cada item com " +
+   "prioridade, responsável e situação, atualizada na própria tela e guardada no núcleo (core.seguranca_itens) — e o " +
+   "retrato das contas de login dos 4 projetos (DP, Gestão, Contábil e Tributário): total, quem nunca entrou, e-mail " +
+   "não confirmado e sem acesso há mais de 90 dias, pela nova função portal-seguranca de cada projeto (ela confere no " +
+   "núcleo que quem pede é administrador antes de responder). Atalhos para as telas de Auth URLs, Entra e GitHub."],
   ["v1.11.0", "31/10/2026",
    "Consumo de IA com os gráficos interativos e o percentual à vista: toda barra (Saldo acabando, limite total, " +
    "Por aplicativo e cotas da Azure) mostra o percentual de quanto resta ou de quanto já foi usado, com a dica no " +
@@ -1000,7 +1023,7 @@ function casca() {
   $("#footVer").textContent = "Portal Artecon " + VERSAO;
 
   var itens = [["inicio", "Início", "home"], ["apps", "Aplicativos", "grid"]];
-  if (souAdmin()) itens.push(["acessos", "Acessos", "key"], ["auditoria", "Auditoria", "audit"]);
+  if (souAdmin()) itens.push(["acessos", "Acessos", "key"], ["auditoria", "Auditoria", "audit"], ["seguranca", "Segurança", "shield"]);
   if (souAdmin() && st.iaAdmin !== false) itens.push(["ia", "Consumo de IA", "spark"]);
   if (souAdmin()) itens.push(["backups", "Cópias de segurança", "cloud"]);
 
@@ -2176,6 +2199,132 @@ T.backups = function () {
   return '<div class="page-head"><div><h1>Cópias de segurança</h1>' +
     "<p>Backup diário do banco e dos arquivos de todos os aplicativos — no OneDrive e na rede do escritório.</p></div></div>" +
     '<div id="painelBackups"><section class="panel"><div class="carregando"><div class="spin"></div>Carregando…</div></section></div>';
+};
+
+/* ---------- Segurança (administrador) — v1.12.0 ---------- */
+var SEG_STATUS = { pendente: "Pendente", em_andamento: "Em andamento", aguardando: "Aguardando",
+  feito: "Feito", aceito: "Risco aceito", nao_se_aplica: "Não se aplica" };
+var SEG_CATEGORIA = { urgente: "Urgente", alto: "Alto", medio: "Médio", rotina: "Rotina", opcional: "Opcional" };
+var SEG_RESP = { cleiver: "Cleiver", claude: "Claude", ambos: "Ambos" };
+
+function carregarSeguranca() {
+  st.segItens = null; st.segContas = null;
+  sb.schema("core").from("seguranca_itens").select("*").order("ordem").then(function (r) {
+    st.segItens = r.error ? { erro: explicar(r.error) } : (r.data || []);
+    if (st.tela === "seguranca") pintarSegItens();
+  });
+  sb.auth.getSession().then(function (r) {
+    var sess = r.data && r.data.session;
+    if (!sess) { st.segContas = { erro: "Sessão expirada — entre de novo." }; if (st.tela === "seguranca") pintarSegContas(); return; }
+    var nomes = Object.keys(CFG.seguranca);
+    Promise.all(nomes.map(function (nome) {
+      return fetch(CFG.seguranca[nome], {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + sess.access_token },
+        body: JSON.stringify({ org: st.org })
+      }).then(function (resp) { return resp.json(); })
+        .then(function (j) { j.projeto = nome; return j; })
+        .catch(function (e) { return { ok: false, projeto: nome, erro: String(e) }; });
+    })).then(function (lista) {
+      st.segContas = lista;
+      if (st.tela === "seguranca") pintarSegContas();
+    });
+  });
+}
+function segData(iso) {
+  if (!iso) return "—";
+  var d = new Date(iso);
+  return ("0" + d.getDate()).slice(-2) + "/" + ("0" + (d.getMonth() + 1)).slice(-2) + "/" + d.getFullYear();
+}
+function pintarSegContas() {
+  var alvo = $("#segContas"); if (!alvo) return;
+  var lista = st.segContas; if (!lista) return;
+  if (lista.erro) { alvo.innerHTML = '<div class="vazio"><b>Não foi possível carregar</b>' + esc(lista.erro) + "</div>"; return; }
+  var agora = Date.now(), DIAS90 = 90 * 86400000;
+  var linhas = lista.map(function (p) {
+    if (!p.ok) return '<div class="seg-proj"><div><b>' + esc(p.projeto) + '</b><p class="seg-flag">Não respondeu: ' + esc(p.erro || "falha") + "</p></div></div>";
+    var contas = p.contas || [];
+    var nunca = contas.filter(function (c) { return !c.ultimo_login; });
+    var nconf = contas.filter(function (c) { return !c.confirmado; });
+    var dorm = contas.filter(function (c) { return c.ultimo_login && (agora - new Date(c.ultimo_login).getTime()) > DIAS90; });
+    var avisos = [];
+    nunca.forEach(function (c) { avisos.push(esc(c.email) + " — nunca entrou (criada " + segData(c.criado) + ")"); });
+    nconf.forEach(function (c) { if (!nunca.some(function (n) { return n.email === c.email; })) avisos.push(esc(c.email) + " — e-mail não confirmado"); });
+    dorm.forEach(function (c) { avisos.push(esc(c.email) + " — sem acesso desde " + segData(c.ultimo_login)); });
+    contas.filter(function (c) { return c.bloqueado; }).forEach(function (c) { avisos.push(esc(c.email) + " — login bloqueado"); });
+    var num = function (n, rot, alerta) {
+      return '<div class="seg-num"><b' + (alerta && n ? ' style="color:#b03a2e"' : "") + ">" + n + "</b><span>" + rot + "</span></div>";
+    };
+    return '<div class="seg-proj"><div><b>' + esc(p.projeto) + "</b>" +
+      '<p class="seg-flag">' + (avisos.length ? avisos.join("<br>") : "Tudo em ordem.") + "</p></div>" +
+      num(p.total, "contas") + num(nunca.length, "nunca entraram", true) +
+      num(nconf.length, "não confirmadas", true) + num(dorm.length, "+90 dias", true) + "</div>";
+  }).join("");
+  alvo.innerHTML = '<div class="bk-head" style="grid-template-columns:minmax(0,1.4fr) repeat(4,minmax(64px,auto))">' +
+    "<span>Projeto · pontos de atenção</span><span>Total</span><span>Nunca</span><span>Não conf.</span><span>+90 d</span></div>" + linhas;
+}
+function pintarSegItens() {
+  var alvo = $("#segItens"); if (!alvo) return;
+  var d = st.segItens; if (!d) return;
+  if (d.erro) { alvo.innerHTML = '<div class="vazio"><b>Não foi possível carregar</b>' + esc(d.erro) + "</div>"; return; }
+  var ordemCat = ["urgente", "alto", "medio", "rotina", "opcional"];
+  var abertos = d.filter(function (i) { return ["pendente", "em_andamento", "aguardando"].indexOf(i.status) > -1; }).length;
+  var linhas = d.slice().sort(function (a, b) {
+    return ordemCat.indexOf(a.categoria) - ordemCat.indexOf(b.categoria) || (a.ordem - b.ordem);
+  }).map(function (i) {
+    var sel = Object.keys(SEG_STATUS).map(function (k) {
+      return '<option value="' + k + '"' + (i.status === k ? " selected" : "") + ">" + SEG_STATUS[k] + "</option>";
+    }).join("");
+    return '<div class="seg-row"><span class="seg-cat ' + esc(i.categoria) + '">' + (SEG_CATEGORIA[i.categoria] || esc(i.categoria)) + "</span>" +
+      "<div><b>" + esc(i.titulo) + "</b>" + (i.detalhe ? "<small>" + esc(i.detalhe) + "</small>" : "") +
+      (i.link ? '<small><a href="' + esc(i.link) + '" target="_blank" rel="noopener">Abrir no painel ↗</a></small>' : "") + "</div>" +
+      '<span class="tag">' + (SEG_RESP[i.responsavel] || esc(i.responsavel)) + "</span>" +
+      '<select data-segid="' + esc(i.id) + '" aria-label="Situação do item">' + sel + "</select></div>";
+  }).join("");
+  alvo.innerHTML = '<div class="bk-head" style="grid-template-columns:92px minmax(0,2fr) 80px 170px">' +
+    "<span>Prioridade</span><span>Item</span><span>Quem</span><span>Situação</span></div>" + linhas +
+    '<p class="bk-rodape">' + abertos + (abertos === 1 ? " item aberto" : " itens abertos") +
+    ". A mudança de situação é guardada na hora no núcleo (core.seguranca_itens) e vale para todos os administradores.</p>";
+  $$("#segItens select[data-segid]").forEach(function (s2) {
+    s2.addEventListener("change", function () {
+      var id = s2.getAttribute("data-segid"), v = s2.value;
+      sb.schema("core").from("seguranca_itens")
+        .update({ status: v, atualizado_em: new Date().toISOString(), atualizado_por: (st.perfil && st.perfil.email) || null })
+        .eq("id", id).then(function (r) {
+          if (r.error) { toast("Não salvou: " + explicar(r.error)); carregarSeguranca(); }
+          else {
+            toast("Situação atualizada");
+            var it = (st.segItens || []).filter(function (x) { return x.id === id; })[0];
+            if (it) it.status = v;
+            pintarSegItens();
+          }
+        });
+    });
+  });
+}
+function segLinks() {
+  var L = [
+    ["Auth URLs — DP", "https://supabase.com/dashboard/project/fbxelwhdiisfmnwrerbl/auth/url-configuration"],
+    ["Auth URLs — Gestão", "https://supabase.com/dashboard/project/vuwgxndahrzinfdlapxz/auth/url-configuration"],
+    ["Auth URLs — Contábil", "https://supabase.com/dashboard/project/yeujqjtjqtegsnzwwazb/auth/url-configuration"],
+    ["Auth URLs — Tributário", "https://supabase.com/dashboard/project/kmdrqkiyhdmdtufrogke/auth/url-configuration"],
+    ["Registros de aplicativo (Entra)", "https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade"],
+    ["Repositórios (GitHub)", "https://github.com/arteconartescontabeis-design?tab=repositories"]
+  ];
+  return '<section class="panel"><div class="bk-head" style="grid-template-columns:1fr"><span>Atalhos dos painéis</span></div>' +
+    '<p style="margin:12px 0 0">' + L.map(function (l) {
+      return '<a class="tag" style="margin:0 8px 8px 0" href="' + l[1] + '" target="_blank" rel="noopener">' + esc(l[0]) + " ↗</a>";
+    }).join("") + "</p></section>";
+}
+T.seguranca = function () {
+  if (!souAdmin()) return semPermissao();
+  carregarSeguranca();
+  return '<div class="page-head"><div><h1>Segurança</h1>' +
+    "<p>Central de controle do chamado de segurança: contas de login dos quatro projetos e o checklist vivo das pendências.</p></div></div>" +
+    '<section class="panel" id="segContas"><div class="carregando"><div class="spin"></div>Carregando contas…</div></section>' +
+    '<div style="height:14px"></div>' +
+    '<section class="panel" id="segItens"><div class="carregando"><div class="spin"></div>Carregando checklist…</div></section>' +
+    '<div style="height:14px"></div>' + segLinks();
 };
 
 /* ---------- Acessos (administrador) ---------- */
