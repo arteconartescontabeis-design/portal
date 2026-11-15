@@ -624,7 +624,9 @@ var CFG = {
   provisionar: {
     cobranca: "https://yeujqjtjqtegsnzwwazb.supabase.co/functions/v1/portal-provisionar",
     /* v1.5.0: Agenda Pro (projeto compartilhado com o Financeiro Pro: o login é o mesmo nos dois) */
-    agenda: "https://vuwgxndahrzinfdlapxz.supabase.co/functions/v1/portal-provisionar"
+    agenda: "https://vuwgxndahrzinfdlapxz.supabase.co/functions/v1/portal-provisionar",
+    /* v1.13.0: Radar (curadoria de notícias e redes) — login próprio, perfis admin/editor/leitor */
+    radar: "https://jhxlsvzvqvufyhkjnmeq.supabase.co/functions/v1/portal-provisionar"
   },
   /* v1.12.0: tela Segurança — a função portal-seguranca de cada projeto devolve o retrato das contas */
   seguranca: {
@@ -635,8 +637,14 @@ var CFG = {
   }
 };
 
-var VERSAO = "v1.12.0";
+var VERSAO = "v1.13.0";
 var VERSOES = [
+  ["v1.13.0", "15/11/2026",
+   "O Radar entra na gestão de pessoas: agora dá para criar, dar acesso e desativar o login do Radar (curadoria de " +
+   "notícias e redes) pelo próprio Portal, como já era com o Cobrança Pro e o Agenda Pro. Perfis: Administrador, " +
+   "Operador (editor) e Leitura (leitor). A senha provisória é entregue à pessoa, que troca no primeiro acesso. " +
+   "Antes, o usuário criado no Portal não entrava no Radar (projetos de login separados), dando “usuário ou senha " +
+   "errada”; a nova função portal-provisionar do projeto do Radar resolve isso, com a mesma checagem de administrador das demais."],
   ["v1.12.0", "11/11/2026",
    "Nova tela Segurança (só administrador): o checklist vivo do chamado de segurança de novembro — cada item com " +
    "prioridade, responsável e situação, atualizada na própria tela e guardada no núcleo (core.seguranca_itens) — e o " +
@@ -2491,7 +2499,8 @@ function temConta(appId) { return !!(CFG.provisionar && CFG.provisionar[appId]);
 var CONTAS = {
   cobranca: { nome: "Cobrança Pro", curto: "Cobrança", niveis: ["operador", "admin"], admin: "Administrador (diretor)", obs: "" },
   agenda:   { nome: "Agenda Pro", curto: "Agenda", niveis: ["leitura", "operador", "admin"], admin: "Administrador",
-              obs: "O login do Agenda Pro é o mesmo do Financeiro Pro: quem já tem login continua com a senha que já usa." }
+              obs: "O login do Agenda Pro é o mesmo do Financeiro Pro: quem já tem login continua com a senha que já usa." },
+  radar:    { nome: "Radar", curto: "Radar", niveis: ["leitura", "operador", "admin"], admin: "Administrador", obs: "" }
 };
 function nomeConta(appId) { return CONTAS[appId] ? CONTAS[appId].nome : appId; }
 function aceitaNivel(appId, nivel) { return !temConta(appId) || !CONTAS[appId] || CONTAS[appId].niveis.indexOf(nivel) > -1; }
