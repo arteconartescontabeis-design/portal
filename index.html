@@ -637,8 +637,14 @@ var CFG = {
   }
 };
 
-var VERSAO = "v1.13.0";
+var VERSAO = "v1.14.0";
 var VERSOES = [
+  ["v1.14.0", "17/11/2026",
+   "Correção na criação de login dos aplicativos (Radar, Cobrança Pro, Agenda Pro): quando a sessão do Portal estava " +
+   "aberta há muito tempo e expirava, a criação do login falhava com “não autorizado” — o acesso era concedido no " +
+   "núcleo, mas a conta no aplicativo não era criada (a pessoa ficava sem conseguir entrar). Agora, nesse caso, o " +
+   "Portal RENOVA a sessão automaticamente e tenta de novo, e o login é criado normalmente. Se mesmo assim a conta " +
+   "ficar sem ser criada, use o botão “Senha do …” da pessoa para criar/definir a senha."],
   ["v1.13.0", "15/11/2026",
    "O Radar entra na gestão de pessoas: agora dá para criar, dar acesso e desativar o login do Radar (curadoria de " +
    "notícias e redes) pelo próprio Portal, como já era com o Cobrança Pro e o Agenda Pro. Perfis: Administrador, " +
@@ -2505,14 +2511,26 @@ var CONTAS = {
 function nomeConta(appId) { return CONTAS[appId] ? CONTAS[appId].nome : appId; }
 function aceitaNivel(appId, nivel) { return !temConta(appId) || !CONTAS[appId] || CONTAS[appId].niveis.indexOf(nivel) > -1; }
 function provisionar(appId, corpo) {
+  var dados = {}; for (var k in corpo) dados[k] = corpo[k]; dados.org = st.org;
+  function enviar(token) {
+    return fetch(CFG.provisionar[appId], {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+      body: JSON.stringify(dados)
+    });
+  }
   return sb.auth.getSession().then(function (r) {
     var s = r.data && r.data.session;
     if (!s) throw new Error("Sessão expirada — entre de novo.");
-    var dados = {}; for (var k in corpo) dados[k] = corpo[k]; dados.org = st.org;
-    return fetch(CFG.provisionar[appId], {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + s.access_token },
-      body: JSON.stringify(dados)
+    return enviar(s.access_token).then(function (resp) {
+      // v1.14.0: a sessão aberta há muito tempo expira e a função devolve 401 (a criação do login não acontecia,
+      // embora o acesso no núcleo fosse concedido). Agora, no 401, RENOVA a sessão e tenta mais uma vez.
+      if (resp.status !== 401) return resp;
+      return sb.auth.refreshSession().then(function (r2) {
+        var s2 = r2.data && r2.data.session;
+        if (!s2) throw new Error("Sessão expirada — entre de novo.");
+        return enviar(s2.access_token);
+      });
     }).then(function (resp) {
       return resp.json().catch(function () { return { ok: false, erro: "resposta inválida (" + resp.status + ")" }; });
     });
