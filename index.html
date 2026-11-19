@@ -448,6 +448,13 @@ select.sel{color:var(--ink)}
 /* v1.11.0: percentuais à vista e gráficos interativos */
 .ia-saldo-pctnum{font-style:normal;color:var(--ink-3);font-weight:600}
 .legend [data-ialegenda]{cursor:pointer;user-select:none;border-radius:6px;padding:2px 6px}
+/* v1.15.0: Gasto por dia/por mês */
+.ia-visao{padding:0;margin:0;flex:0 0 auto}
+.ia-visao button{flex:0 0 auto;padding:5px 12px;font-size:12.5px;background:var(--surface);color:inherit}
+.ia-visao button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+#iaGasto .panel-head{flex-wrap:wrap}
+#iaGasto .legend{margin-left:auto}
+.chart .val{font:700 10.5px var(--font-ui);fill:var(--ink-2)}
 .legend [data-ialegenda]:hover{background:var(--surface-2)}
 .legend .leg-off{opacity:.38;text-decoration:line-through}
 .chart .dia-cx:hover{fill:rgba(15,23,42,.08)}
@@ -637,8 +644,15 @@ var CFG = {
   }
 };
 
-var VERSAO = "v1.14.0";
+var VERSAO = "v1.15.0";
 var VERSOES = [
+  ["v1.15.0", "19/11/2026",
+   "Consumo de IA: novo gráfico “Gasto por mês” — o botão Por dia / Por mês troca o gráfico para os últimos 12 " +
+   "meses, uma barra por mês empilhada por aplicativo, com o total escrito em cima de cada barra e os valores de " +
+   "cada aplicativo na dica do toque (a legenda clicável vale para as duas visões). E a recarga ficou automática " +
+   "de verdade: no modo “Automática” (IA Central v1.3.0), quando o saldo estimado da Anthropic cai abaixo do " +
+   "gatilho, o Portal lança a recarga do valor configurado sozinho — espelhando o auto-reload da página de " +
+   "cobrança da Anthropic — e avisa para conferir o recibo. Exige rodar o ia_central_v1.3.0.sql no núcleo."],
   ["v1.14.0", "17/11/2026",
    "Correção na criação de login dos aplicativos (Radar, Cobrança Pro, Agenda Pro): quando a sessão do Portal estava " +
    "aberta há muito tempo e expirava, a criação do login falhava com “não autorizado” — o acesso era concedido no " +
@@ -1572,8 +1586,18 @@ function dialogoFalaDesfazer(id) {
     });
 }
 
+/* v1.15.0: gasto por mês (últimos 12 meses) — exige o ia_central_v1.3.0.sql */
+function carregarIaMensal() {
+  sb.schema("core").rpc("ia_mensal", {}).then(function (r) {
+    st.iaMensal = r.error ? null : r.data;
+    var g = $("#iaGasto");
+    if (g && st.ia && st.iaVisao === "mes") g.outerHTML = blocoGastoDia(st.ia, st.ia.apps || []);
+  }, function () { st.iaMensal = null; });
+}
+
 function carregarIa() {
   carregarIaFala();
+  carregarIaMensal();
   sb.schema("core").rpc("ia_painel", { p_mes: st.iaMes + "-01" }).then(function (r) {
     if (r.error) throw r.error;
     st.ia = r.data;
@@ -1785,16 +1809,75 @@ function painelIa(d) {
   return h;
 }
 
-/* v1.11.0: o quadro do gasto por dia — a legenda é clicável (esconde/mostra cada aplicativo) e a escala se ajusta */
+/* v1.11.0: o quadro do gasto — a legenda é clicável (esconde/mostra cada aplicativo) e a escala se ajusta.
+   v1.15.0: o botão Por dia / Por mês troca entre o mês escolhido (por dia) e os últimos 12 meses (por mês). */
 function blocoGastoDia(d, apps) {
   st.iaOcultos = st.iaOcultos || {};
-  return '<section class="panel" id="iaGasto"><div class="panel-head"><h2>' + ic("cal") + "Gasto por dia</h2>" +
+  st.iaVisao = st.iaVisao || "dia";
+  var mesVisao = st.iaVisao === "mes";
+  return '<section class="panel" id="iaGasto"><div class="panel-head"><h2>' + ic("cal") +
+    (mesVisao ? "Gasto por mês" : "Gasto por dia") + "</h2>" +
+    '<div class="seg ia-visao" role="radiogroup" aria-label="Período do gráfico">' +
+    '<button data-iavisao="dia" aria-pressed="' + !mesVisao + '">Por dia</button>' +
+    '<button data-iavisao="mes" aria-pressed="' + mesVisao + '">Por mês</button></div>' +
     '<div class="legend">' + apps.map(function (a, i) {
       var off = !!st.iaOcultos[a.app];
       return '<span data-ialegenda="' + esc(a.app) + '" class="' + (off ? "leg-off" : "") + '" role="button" tabindex="0"' +
         ' title="' + (off ? "clique para mostrar no gráfico" : "clique para esconder do gráfico") + '">' +
         '<i style="background:' + iaCor(a.app, i) + '"></i>' + esc(a.nome.split(" — ")[0]) + "</span>";
-    }).join("") + "</div></div>" + graficoDiario(d, apps) + "</section>";
+    }).join("") + "</div></div>" + (mesVisao ? graficoMensal(apps) : graficoDiario(d, apps)) + "</section>";
+}
+
+/* v1.15.0: gasto dos últimos 12 meses, uma barra por mês empilhada por aplicativo, com o total em cima */
+function graficoMensal(apps) {
+  if (!st.iaMensal) return '<div class="vazio"><b>Gasto por mês indisponível</b>O núcleo ainda não tem a função ia_mensal: rode o ia_central_v1.3.0.sql no projeto Departamento Pessoal.</div>';
+  var meses = mesesRecentes(12).reverse();                         /* do mais antigo ao mês atual */
+  var ocultos = st.iaOcultos || {};
+  var porMes = {}, max = 0;
+  st.iaMensal.forEach(function (x) {
+    if (ocultos[x.app]) return;
+    porMes[x.mes] = porMes[x.mes] || {};
+    porMes[x.mes][x.app] = (porMes[x.mes][x.app] || 0) + (+x.custo || 0);
+  });
+  meses.forEach(function (m) {
+    var info = porMes[m.id] || {}, t = 0;
+    Object.keys(info).forEach(function (a) { t += info[a]; });
+    if (t > max) max = t;
+  });
+  if (!max) return '<div class="vazio"><b>' + (Object.keys(ocultos).some(function (k) { return ocultos[k]; })
+    ? "Nada a mostrar com esta seleção</b>Toque nos nomes da legenda para trazer os aplicativos de volta ao gráfico."
+    : "Nenhum gasto nos últimos 12 meses</b>As barras aparecem conforme os aplicativos usam a IA.") + "</div>";
+
+  var passos = [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100];
+  var topo = passos.filter(function (p) { return p * 4 >= max; })[0] || Math.ceil(max / 4);
+  topo = topo * 4;
+  var W = 760, H = 250, L = 58, R = 10, T0 = 24, B = 30, pw = W - L - R, ph = H - T0 - B;
+  var bw = pw / meses.length;
+  var svg = '<svg class="chart" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Gasto com IA por mês, últimos 12 meses">';
+  for (var g = 0; g <= 4; g++) {
+    var y = T0 + ph - ph * g / 4, val = topo * g / 4;
+    svg += '<line class="g" x1="' + L + '" x2="' + (W - R) + '" y1="' + y + '" y2="' + y + '"/>' +
+      '<text x="' + (L - 8) + '" y="' + (y + 4) + '" text-anchor="end">' + (g ? eixo(val, topo) : "0") + "</text>";
+  }
+  meses.forEach(function (m, idx) {
+    var x = L + idx * bw, base = T0 + ph, info = porMes[m.id] || {}, tit = [], total = 0;
+    apps.forEach(function (a, i) {
+      if (ocultos[a.app]) return;
+      var v = info[a.app] || 0; if (!v) return;
+      var hgt = Math.max(1.5, v / topo * ph);
+      base -= hgt; total += v;
+      svg += '<rect x="' + (x + bw * 0.18).toFixed(1) + '" y="' + base.toFixed(1) + '" width="' + (bw * 0.64).toFixed(1) +
+        '" height="' + hgt.toFixed(1) + '" rx="2" fill="' + iaCor(a.app, i) + '"/>';
+      tit.push(a.nome.split(" — ")[0] + ": " + usdFino(v));
+    });
+    if (total > 0) {
+      svg += '<text class="val" x="' + (x + bw / 2).toFixed(1) + '" y="' + Math.max(10, base - 5).toFixed(1) + '" text-anchor="middle">' + eixo(total, topo) + "</text>";
+      svg += '<rect class="dia-cx" x="' + x.toFixed(1) + '" y="' + T0 + '" width="' + bw.toFixed(1) + '" height="' + ph + '" fill="transparent"><title>' +
+        nomeMes(m.id) + "\n" + tit.join("\n") + "\nTotal: " + usdFino(total) + "</title></rect>";
+    }
+    svg += '<text x="' + (x + bw / 2).toFixed(1) + '" y="' + (H - 8) + '" text-anchor="middle">' + m.nome.slice(0, 3) + "/" + m.id.slice(2, 4) + "</text>";
+  });
+  return '<div style="overflow-x:auto">' + svg + "</svg></div>";
 }
 
 function graficoDiario(d, apps) {
@@ -1899,8 +1982,8 @@ function blocoRecarga(d, rec, c) {
 
 function textoModo(modo, c) {
   if (modo === "automatica")
-    return '<p class="ia-nota">Com a recarga automática, a conta se recarrega sozinha. Ative na página de cobrança de cada conta que quiser (Anthropic e, se for o caso, OpenAI), com os mesmos valores. ' +
-      "A cada recibo que chegar por e-mail, lance a recarga aqui para o saldo estimado continuar certo.</p>";
+    return '<p class="ia-nota">Com o modo automática, o Portal acompanha sozinho (IA Central v1.3.0): quando o saldo estimado da <b>Anthropic</b> cair abaixo do gatilho, ele lança a recarga do valor configurado por conta própria e avisa, na tela e por e-mail, para conferir o recibo. ' +
+      "Para o estimado bater com o real, ative o auto-reload na página de cobrança da Anthropic com os MESMOS valor e gatilho daqui. As demais contas (OpenAI e Cleanvoice) seguem com o lançamento manual.</p>";
   return '<p class="ia-nota">Você compra os créditos na página de cada conta quando precisar (botões acima) e lança a recarga aqui. ' +
     "Quando o saldo estimado ficar abaixo do mínimo (" + usd(c.saldo_minimo_usd) + " na Anthropic" +
     (c.saldo_minimo_openai_usd !== undefined ? ", " + usd(c.saldo_minimo_openai_usd) + " na OpenAI" : "") +
@@ -2093,9 +2176,15 @@ function salvarCfgIa(btn) {
 }
 
 document.addEventListener("click", function (e) {
-  var b = e.target.closest("[data-ialim],[data-iatoken],[data-iasaldo],[data-iarel],[data-ialidas],[data-iamodo],[data-iasalvarmodo],[data-iasalvarcfg],[data-falalancar],[data-faladesfazer],[data-ialegenda]");
+  var b = e.target.closest("[data-ialim],[data-iatoken],[data-iasaldo],[data-iarel],[data-ialidas],[data-iamodo],[data-iasalvarmodo],[data-iasalvarcfg],[data-falalancar],[data-faladesfazer],[data-ialegenda],[data-iavisao]");
   if (!b) return;
   var d = b.dataset;
+  if (d.iavisao) {                                               /* v1.15.0: Por dia / Por mês */
+    st.iaVisao = d.iavisao;
+    var gv = document.getElementById("iaGasto");
+    if (gv && st.ia) gv.outerHTML = blocoGastoDia(st.ia, st.ia.apps || []);
+    return;
+  }
   if (d.ialegenda !== undefined) {                               /* v1.11.0: esconde/mostra o aplicativo no Gasto por dia */
     st.iaOcultos = st.iaOcultos || {};
     st.iaOcultos[d.ialegenda] = !st.iaOcultos[d.ialegenda];
