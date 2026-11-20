@@ -644,8 +644,15 @@ var CFG = {
   }
 };
 
-var VERSAO = "v1.15.0";
+var VERSAO = "v1.16.0";
 var VERSOES = [
+  ["v1.16.0", "20/11/2026",
+   "Azure (voz e transcrição) com controle único no Portal: o Radar entra como aplicativo de transcrição — os " +
+   "minutos dos reels somam na MESMA cota dos áudios do Agenda, com os avisos de 80% e 100% (tela e e-mail) sobre " +
+   "o total somado. Cada aplicativo de transcrição ganha o botão Gerar token no próprio cartão, e as duas cotas do " +
+   "mês (minutos e caracteres) ficaram configuráveis no quadro Azure — para subir se o recurso migrar do plano " +
+   "grátis F0 para o S0 pago. Os aplicativos leem o consumo somado e a cota pela nova função ia_fala_consumo e " +
+   "podem barrar antes de estourar. Exige o ia_central_v1.4.0.sql no núcleo."],
   ["v1.15.0", "19/11/2026",
    "Consumo de IA: novo gráfico “Gasto por mês” — o botão Por dia / Por mês troca o gráfico para os últimos 12 " +
    "meses, uma barra por mês empilhada por aplicativo, com o total escrito em cima de cada barra e os valores de " +
@@ -1492,7 +1499,7 @@ function cartoesFala(f, mes) {
       '<div class="ia-app-nome"><b>' + esc(a.nome) + "</b><small>" +
         esc(a.descricao || (voz ? "voz da Azure (texto → fala)" : "transcrição da Azure (fala → texto)")) + "</small></div>" +
       '<span class="tag ok">grátis</span></div>' +
-      '<div class="ia-app-num"><b>' + (voz ? carTexto(usado) : minTexto(usado)) + "</b><span>de " + (voz ? "500 mil" : "300 min") + ' no mês · <em class="ia-saldo-pctnum">' + Math.round(pct) + "%</em></span></div>" +
+      '<div class="ia-app-num"><b>' + (voz ? carTexto(usado) : minTexto(usado)) + "</b><span>de " + (voz ? carTexto(fc) : minTexto(fs)) + ' no mês · <em class="ia-saldo-pctnum">' + Math.round(pct) + "%</em></span></div>" +
       '<div class="iabar' + (nv ? " " + nv : "") + '" title="usado ' + Math.round(pct) + '% da cota grátis · faltam ' + Math.max(0, Math.round(100 - pct)) + '%"><i style="width:' + pct.toFixed(1) + '%"></i><em style="left:80%"></em></div>' +
       '<dl class="ia-dl">' +
       "<div><dt>Hoje</dt><dd>" + (ehMesAtual ? falaQtd(a, "hoje") : "—") + "</dd></div>" +
@@ -1500,8 +1507,10 @@ function cartoesFala(f, mes) {
       "<div><dt>Último uso</dt><dd>" + (a.ultimo_uso ? esc(quandoTexto(a.ultimo_uso)) : "nunca") + "</dd></div>" +
       "<div><dt>Conta</dt><dd>Azure · " + (voz ? "lançado à mão" : (a.tem_token ? "informado sozinho" : '<span class="warn-t">sem token</span>')) + "</dd></div>" +
       "</dl>" +
-      (voz ? '<div class="acoes" style="justify-content:flex-start"><button class="mini" data-falalancar="' + esc(a.app) + '">Lançar uso</button></div>' : "") +
-      "</article>";
+      '<div class="acoes" style="justify-content:flex-start">' +
+      (voz ? '<button class="mini" data-falalancar="' + esc(a.app) + '">Lançar uso</button>'
+           : '<button class="mini" data-falatoken="' + esc(a.app) + '">' + (a.tem_token ? "Trocar token" : "Gerar token") + "</button>") +
+      "</div></article>";
   }).join("");
 }
 function painelFala(f, mes) {
@@ -1519,13 +1528,21 @@ function painelFala(f, mes) {
   return '<section class="panel"><div class="panel-head"><h2>' + ic("mic") + "Azure — voz e transcrição</h2>" +
     '<button class="btn sm" data-falalancar="">Lançar uso</button></div>' +
     '<div class="fala-cotas">' +
-    cota("Transcrição (fala → texto)", ts, fs, minTexto(ts), "300 min (5 h)", ehMesAtual ? minTexto(f.total_hoje) : "") +
-    cota("Voz (texto → fala)", tc, fc, carTexto(tc), "500 mil caracteres", ehMesAtual ? carTexto(f.total_caracteres_hoje) : "") +
+    cota("Transcrição (fala → texto)", ts, fs, minTexto(ts), minTexto(fs), ehMesAtual ? minTexto(f.total_hoje) : "") +
+    cota("Voz (texto → fala)", tc, fc, carTexto(tc), carTexto(fc), ehMesAtual ? carTexto(f.total_caracteres_hoje) : "") +
     "</div>" +
+    /* v1.16.0: as cotas são configuráveis (core.ia_config), para subir se o recurso migrar do F0 ao S0 */
+    '<div class="dlg-acoes" style="justify-content:flex-start;align-items:flex-end;flex-wrap:wrap">' +
+    '<div class="f" style="margin:0"><label for="falaCotaMin">Cota de transcrição no mês (minutos)</label>' +
+    '<input id="falaCotaMin" type="number" min="1" step="1" value="' + Math.round(fs / 60) + '"></div>' +
+    '<div class="f" style="margin:0"><label for="falaCotaCar">Cota de voz no mês (caracteres)</label>' +
+    '<input id="falaCotaCar" type="number" min="1000" step="1000" value="' + fc + '"></div>' +
+    '<button class="btn sm primary" data-falacotas="1">Salvar cotas</button></div>' +
     '<p class="ia-nota">Recurso ' + esc(f.recurso || "de voz da Azure") + ": as duas cotas são do mês e valem para todos os " +
-    "aplicativos juntos (os cartões em Por aplicativo). Custo: " + usd(0) + ". Passando da cota a Azure não cobra: recusa até o mês virar " +
-    "(o áudio do WhatsApp recebe \"mande por texto\" e não sai fala nova). A transcrição do Agenda entra sozinha; a voz gerada para o " +
-    "Projeto Criança e para o Estudo da Reforma entra por <b>Lançar uso</b>.</p>" +
+    "aplicativos juntos (os cartões em Por aplicativo) — a transcrição soma o Agenda e o Radar na MESMA cota. No plano grátis F0, " +
+    "passando da cota a Azure não cobra: recusa até o mês virar (o áudio do WhatsApp recebe \"mande por texto\" e não sai fala nova); " +
+    "se o recurso migrar para o S0 (pago), suba a cota aqui. A transcrição do Agenda e a do Radar entram sozinhas (cada uma com seu " +
+    "token, gerado no cartão do aplicativo); a voz gerada para o Projeto Criança e para o Estudo da Reforma entra por <b>Lançar uso</b>.</p>" +
     (lanc.length
       ? '<h3 class="ia-sub">Lançados à mão</h3><div style="overflow-x:auto"><table class="tb"><thead><tr><th>Quando</th><th>Aplicativo</th><th>Quantidade</th><th>Observação</th><th></th></tr></thead><tbody>' +
         lanc.map(function (l) {
@@ -1581,6 +1598,48 @@ function dialogoFalaDesfazer(id) {
         iaRpc("ia_fala_desfazer", { p_id: +id }, this, "Desfazendo…").then(function (r) {
           if (!r) return;
           $("#dlg").close(); toast("Lançamento desfeito"); carregarIa();
+        });
+      });
+    });
+}
+
+/* v1.16.0: cotas da Azure configuráveis e token dos aplicativos de transcrição (ia_central_v1.4.0.sql) */
+function salvarFalaCotas(btn) {
+  var min = numCampo("falaCotaMin"), car = numCampo("falaCotaCar");
+  if (min === null || min < 1 || Math.round(min) !== min) { toast("Informe a cota de transcrição em minutos inteiros."); return; }
+  if (car === null || car < 1000) { toast("Informe a cota de voz em caracteres (mínimo 1.000)."); return; }
+  iaRpc("ia_fala_salvar_franquia", { p_seg: Math.round(min * 60), p_caracteres: Math.round(car) }, btn)
+    .then(function (r) { if (!r) return; toast("Cotas da Azure salvas"); carregarIa(); });
+}
+function dialogoFalaToken(app) {
+  var a = ((st.iaFala && st.iaFala.apps) || []).filter(function (x) { return x.app === app; })[0];
+  if (!a) return;
+  abrirDialogo(
+    "<h2>" + (a.tem_token ? "Trocar o token" : "Gerar o token") + " de " + esc(a.nome) + "</h2>" +
+    (a.tem_token
+      ? "<p><b>O token atual deixa de funcionar na hora.</b> O aplicativo fica sem registrar a transcrição até receber o token novo no secret dele. Faça a troca quando for atualizar o aplicativo.</p>"
+      : "<p>O token é a senha do aplicativo para registrar os minutos de transcrição da Azure na IA Central (ia_fala_registrar). Ele aparece uma única vez: copie e guarde no secret do aplicativo antes de fechar.</p>") +
+    '<div id="ftkArea"></div>' +
+    '<div class="dlg-acoes" id="ftkAcoes"><button class="btn" data-fechar>Cancelar</button><button class="btn primary" id="ftkOk">' +
+    (a.tem_token ? "Trocar token" : "Gerar token") + "</button></div>",
+    function () {
+      $("#ftkOk").addEventListener("click", function () {
+        iaRpc("ia_fala_gerar_token", { p_app: app }, this, "Gerando…").then(function (r) {
+          if (!r) return;
+          $("#dlg").dataset.obrigatorio = "1";
+          $("#ftkArea").innerHTML =
+            '<div class="f"><label for="ftkVal">Token de ' + esc(a.nome) + '</label><input id="ftkVal" type="text" readonly value="' + esc(r.data) + '"></div>' +
+            '<p class="ia-nota">Copie agora. Depois de fechar, só gerando outro.</p>';
+          $("#ftkAcoes").innerHTML = '<button class="btn" id="ftkCopiar">Copiar</button><button class="btn primary" id="ftkFim">Já guardei</button>';
+          $("#ftkVal").select();
+          $("#ftkCopiar").addEventListener("click", function () {
+            var v = $("#ftkVal").value;
+            (navigator.clipboard ? navigator.clipboard.writeText(v) : Promise.reject()).then(function () { toast("Token copiado"); })
+              .catch(function () { $("#ftkVal").select(); document.execCommand("copy"); toast("Token copiado"); });
+          });
+          $("#ftkFim").addEventListener("click", function () {
+            $("#dlg").dataset.obrigatorio = ""; $("#dlg").close(); carregarIa();
+          });
         });
       });
     });
@@ -2176,7 +2235,7 @@ function salvarCfgIa(btn) {
 }
 
 document.addEventListener("click", function (e) {
-  var b = e.target.closest("[data-ialim],[data-iatoken],[data-iasaldo],[data-iarel],[data-ialidas],[data-iamodo],[data-iasalvarmodo],[data-iasalvarcfg],[data-falalancar],[data-faladesfazer],[data-ialegenda],[data-iavisao]");
+  var b = e.target.closest("[data-ialim],[data-iatoken],[data-iasaldo],[data-iarel],[data-ialidas],[data-iamodo],[data-iasalvarmodo],[data-iasalvarcfg],[data-falalancar],[data-faladesfazer],[data-falatoken],[data-falacotas],[data-ialegenda],[data-iavisao]");
   if (!b) return;
   var d = b.dataset;
   if (d.iavisao) {                                               /* v1.15.0: Por dia / Por mês */
@@ -2194,6 +2253,8 @@ document.addEventListener("click", function (e) {
   }
   if (d.falalancar !== undefined) return dialogoFalaLancar(d.falalancar);     /* v1.7.0 */
   if (d.faladesfazer) return dialogoFalaDesfazer(d.faladesfazer);
+  if (d.falatoken !== undefined) return dialogoFalaToken(d.falatoken);        /* v1.16.0 */
+  if (d.falacotas) return salvarFalaCotas(b);                                 /* v1.16.0 */
   if (d.ialim) return dialogoIaLimites(d.ialim);
   if (d.iatoken) return dialogoIaToken(d.iatoken);
   if (d.iasaldo) return dialogoIaSaldo(d.iasaldo);
